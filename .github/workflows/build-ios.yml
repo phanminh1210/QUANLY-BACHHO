@@ -1,0 +1,39 @@
+name: Build iOS (Capacitor)
+
+on:
+  push:
+    branches: [ main, master ] # Tự động build khi push code lên nhánh main/master
+  workflow_dispatch: # Cho phép bấm nút build thủ công trên GitHub
+
+jobs:
+  build-ios:
+    runs-on: macos-latest # Chạy trên máy Mac của GitHub
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Build Web App
+        run: npm run build
+
+      - name: Sync Capacitor iOS
+        run: npx cap sync ios
+
+      - name: Build iOS App (.xcarchive / .app)
+        run: |
+          cd ios/App
+          xcodebuild -workspace App.xcworkspace -scheme App -sdk iphoneos -configuration Release clean archive -archivePath build/App.xcarchive CODE_SIGNING_ALLOWED=NO
+
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ios-build
+          path: ios/App/build/App.xcarchive
