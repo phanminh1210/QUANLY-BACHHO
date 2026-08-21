@@ -73,9 +73,11 @@ const goTo = (path: string) => {
   position: fixed;
   right: 18px;
   bottom: 18px;
-  width: 190px;
-  height: 260px;
+  /* Giới hạn kích thước khung chứa và bỏ qua nhận sự kiện chuột */
+  width: 58px;
+  height: 58px;
   z-index: 9999;
+  pointer-events: none;
 }
 
 .fab-main {
@@ -93,6 +95,8 @@ const goTo = (path: string) => {
   display: flex;
   align-items: center;
   justify-content: center;
+  /* Bật lại sự kiện chuột cho nút chính */
+  pointer-events: auto;
 }
 
 .fab-main__icon {
@@ -130,6 +134,7 @@ const goTo = (path: string) => {
 .fab-option--open {
   opacity: 1;
   transform: translateY(0) scale(1);
+  /* Bật lại sự kiện chuột khi option được mở ra */
   pointer-events: auto;
 }
 
