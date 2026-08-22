@@ -1,19 +1,18 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
 
-// Import các trang chính
-import Login from '../pages/Login.vue'
-import MainLayout from '../layouts/MainLayout.vue'
-import Home from '../pages/Home.vue'
-import Dashboard from '../pages/Dashboard.vue'
+import Login       from '../pages/Login.vue'
+import MainLayout  from '../layouts/MainLayout.vue'
+import Home        from '../pages/Home.vue'
+import Dashboard   from '../pages/Dashboard.vue'
 import TatCaLichDien from '../pages/TatCaLichDien.vue'
-import ShowChuaDien from '../pages/ShowChuaDien.vue'
-import ShowDaDien from '../pages/ShowDaDien.vue'
-import ChiTietShow from '../pages/ChiTietShow.vue'  
-import ChamCong from '../pages/ChamCong.vue'
-import NhanSu from '../pages/NhanSu.vue'
+import ShowChuaDien  from '../pages/ShowChuaDien.vue'
+import ShowDaDien    from '../pages/ShowDaDien.vue'
+import ChiTietShow   from '../pages/ChiTietShow.vue'
+import ChamCong      from '../pages/ChamCong.vue'
+import NhanSu        from '../pages/NhanSu.vue'
+import TaiKhoan      from '../pages/TaiKhoan.vue'
 
-// Import trang Đăng ký show (sử dụng Lazy Load)
 const DangKyShow = () => import('../pages/DangKyShow.vue')
 
 const routes: RouteRecordRaw[] = [
@@ -27,41 +26,14 @@ const routes: RouteRecordRaw[] = [
     component: MainLayout,
     redirect: '/home',
     children: [
-      {
-        path: 'home',
-        name: 'home',
-        component: Home,
-      },
-      {
-        path: 'dashboard',
-        name: 'dashboard',
-        component: Dashboard,
-      },
-      {
-        path: 'tat-ca-lich-dien',
-        name: 'TatCaLichDien',
-        component: TatCaLichDien,
-      },
-      {
-        path: 'show-chua-dien',
-        name: 'ShowChuaDien',
-        component: ShowChuaDien,
-      },
-      {
-        path: 'show-da-dien',
-        name: 'ShowDaDien',
-        component: ShowDaDien,
-      },
-      {
-        path: 'cham-cong',
-        name: 'ChamCong',
-        component: ChamCong,
-      },
-      {
-        path: 'nhan-su',
-        name: 'NhanSu',
-        component: NhanSu,
-      },
+      { path: 'home',             name: 'home',          component: Home },
+      { path: 'dashboard',        name: 'dashboard',     component: Dashboard },
+      { path: 'tat-ca-lich-dien', name: 'TatCaLichDien', component: TatCaLichDien },
+      { path: 'show-chua-dien',   name: 'ShowChuaDien',  component: ShowChuaDien },
+      { path: 'show-da-dien',     name: 'ShowDaDien',    component: ShowDaDien },
+      { path: 'cham-cong',        name: 'ChamCong',      component: ChamCong },
+      { path: 'nhan-su',          name: 'NhanSu',        component: NhanSu },
+      { path: 'tai-khoan',        name: 'TaiKhoan',      component: TaiKhoan },
       {
         path: 'chi-tiet-show/:id',
         name: 'ChiTietShow',

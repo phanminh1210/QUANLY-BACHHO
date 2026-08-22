@@ -7,15 +7,15 @@
           <router-link class="home-menu__item" to="/tat-ca-lich-dien">Tất cả lịch diễn</router-link>
           <router-link class="home-menu__item" to="/show-chua-dien">Show chưa diễn</router-link>
           <router-link class="home-menu__item" to="/show-da-dien">Show đã diễn</router-link>
-          <router-link class="home-menu__item" to="/nhan-su">Thông tin nhân sự</router-link>
-          <router-link class="home-menu__item" to="/khach-hang">Thông tin khách hàng</router-link>
           <router-link class="home-menu__item" to="/cham-cong">Danh sách chấm công</router-link>
+          <!-- Chỉ admin -->
+          <router-link v-if="isAdmin" class="home-menu__item" to="/nhan-su">Thông tin nhân sự</router-link>
+          <router-link v-if="isAdmin" class="home-menu__item" to="/khach-hang">Thông tin khách hàng</router-link>
         </div>
       </div>
     </section>
 
     <section class="home-bottom">
-      <!-- LỊCH DIỄN SẮP TỚI -->
       <div class="section-title">📅 Lịch diễn sắp tới</div>
 
       <div v-if="loadingShows" class="state-msg">Đang tải lịch diễn...</div>
@@ -31,7 +31,6 @@
             <div class="schedule-card__name">{{ item.name }}</div>
             <div class="schedule-card__tag schedule-card__tag--not-played">Sắp diễn</div>
           </div>
-
           <div class="schedule-card__content">
             <div class="schedule-card__line">
               <span class="schedule-card__key">Ngày:</span>
@@ -47,7 +46,6 @@
               <span class="schedule-card__key">SĐT:</span>
               <span class="schedule-card__value">{{ item.phone || 'Chưa có' }}</span>
             </div>
-
             <div class="schedule-card__actions">
               <button class="btn btn--green" type="button" @click="goToRegister(item)">Đăng ký diễn</button>
               <button class="btn btn--red"   type="button" @click="goToDetail(item.id)">Chi tiết</button>
@@ -56,7 +54,6 @@
         </article>
       </div>
 
-      <!-- THỐNG KÊ -->
       <div class="section-title">📊 Thống kê show {{ currentYear }}</div>
 
       <div v-if="loadingStats" class="state-msg">Đang tải thống kê...</div>
@@ -103,9 +100,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { API_ENDPOINTS } from '../config/api'
+import { getUserField } from '../utils/auth'
 
 type ShowItem = {
   id: string | number
@@ -126,6 +124,20 @@ const loadingShows  = ref(false)
 const loadingStats  = ref(false)
 const upcomingShows = ref<ShowItem[]>([])
 const stats = ref({ totalYear: 0, totalMonth: 0, doneMonth: 0, pendingMonth: 0 })
+
+// ── Admin check ───────────────────────────────────────────
+const isAdmin = computed(() => {
+  const role = getUserField('vai_tro') || getUserField('role')
+  if (role) return String(role).trim().toLowerCase() === 'admin'
+  const raw = localStorage.getItem('user_info') || localStorage.getItem('user')
+  if (raw) {
+    try {
+      const p = JSON.parse(raw)
+      return String(p.vai_tro || p.role || '').trim().toLowerCase() === 'admin'
+    } catch {}
+  }
+  return false
+})
 
 const parseDate = (dateStr: string): Date | null => {
   if (!dateStr) return null
@@ -173,8 +185,8 @@ const fetchStats = async () => {
       for (const item of result.data) {
         const d = parseDate(item.ngay || '')
         if (!d) continue
-        const y = d.getFullYear()
-        const m = d.getMonth() + 1
+        const y      = d.getFullYear()
+        const m      = d.getMonth() + 1
         const status = (item.trang_thai || '').trim().toLowerCase()
         if (y === currentYear) {
           totalYear++
@@ -220,7 +232,7 @@ const goToRegister = (item: ShowItem)      => router.push({ name: 'DangKyShow', 
 .section-title { max-width: 760px; margin: 0 auto 8px; font-size: 13px; font-weight: 800; color: #8f0000; }
 .state-msg     { text-align: center; padding: 14px; font-size: 13px; font-weight: 600; color: #8f0000; }
 
-/* ── Upcoming — dùng chung CSS với các trang schedule ── */
+/* ── Upcoming ── */
 .upcoming-list { max-width: 760px; margin: 0 auto 18px; display: flex; flex-direction: column; gap: 8px; }
 
 .schedule-card {
@@ -233,8 +245,7 @@ const goToRegister = (item: ShowItem)      => router.push({ name: 'DangKyShow', 
 
 .schedule-card__top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
 .schedule-card__name { font-size: 16px; font-weight: 800; color: #8f0000; line-height: 1.2; }
-
-.schedule-card__tag { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 999px; white-space: nowrap; }
+.schedule-card__tag  { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 999px; white-space: nowrap; }
 .schedule-card__tag--not-played { color: #a16207; background: #fffbea; }
 
 .schedule-card__content { display: flex; flex-direction: column; gap: 4px; }
@@ -242,13 +253,9 @@ const goToRegister = (item: ShowItem)      => router.push({ name: 'DangKyShow', 
 .schedule-card__key     { font-size: 13px; font-weight: 700; color: #8f0000; }
 .schedule-card__key--inline { margin-left: 10px; }
 .schedule-card__value   { font-size: 13px; font-weight: 500; color: #444; }
-
 .schedule-card__actions { margin-top: 6px; display: flex; justify-content: flex-end; gap: 6px; flex-wrap: wrap; }
 
-.btn {
-  border: none; border-radius: 999px; padding: 6px 13px;
-  color: #fff; font-size: 12px; font-weight: 700; cursor: pointer; transition: opacity .15s;
-}
+.btn { border: none; border-radius: 999px; padding: 6px 13px; color: #fff; font-size: 12px; font-weight: 700; cursor: pointer; transition: opacity .15s; }
 .btn--green { background: #16a34a; } .btn--green:hover { background: #15803d; }
 .btn--red   { background: #8f0000; } .btn--red:hover   { background: #a50000; }
 

@@ -1,3 +1,5 @@
+// chamcong.vue
+
 <script setup lang="ts">
 import { computed, ref, onMounted, watch } from 'vue'
 import { API_ENDPOINTS } from '../config/api'
@@ -105,21 +107,27 @@ const fetchChamCongChiTiet = async () => {
     }
 
     if ((res?.code === 200 || res?.status === 'success') && Array.isArray(res?.data)) {
-      julyAttendances.value = res.data.map((item: any) => {
-        const salaryNum = salaryToNumber(item?.luong)
-        return {
-          id: (item?.ma_ns || '').toString().trim(),
-          name: (item?.ten_ns || '').toString().trim(),
-          showId: (item?.ma_show || '').toString().trim(),
-          showName: (item?.ten_show || '').toString().trim(),
-          workDate: (item?.ngay_lamviec || '').toString(),
-          role: (item?.vai_tro || '').toString(),
-          salary: formatMoney(salaryNum),
-          note: (item?.ghi_chu || item?.['ghi chu'] || '').toString(),
-          month: item?.thang_chamcong || selectedMonth.value,
-          year: item?.nam_chamcong || selectedYear.value
-        }
-      })
+      julyAttendances.value = res.data
+        .filter((item: any) => {
+          // ✅ Chỉ lấy dòng có tên NS
+          const tenNS = (item?.ten_ns || '').toString().trim()
+          return tenNS !== ''
+        })
+        .map((item: any) => {
+          const salaryNum = salaryToNumber(item?.luong)
+          return {
+            id: (item?.ma_ns || '').toString().trim(),
+            name: (item?.ten_ns || '').toString().trim(),
+            showId: (item?.ma_show || '').toString().trim(),
+            showName: (item?.ten_show || '').toString().trim(),
+            workDate: (item?.ngay_lamviec || '').toString(),
+            role: (item?.vai_tro || '').toString(),
+            salary: formatMoney(salaryNum),
+            note: (item?.ghi_chu || item?.['ghi chu'] || '').toString(),
+            month: item?.thang_chamcong || selectedMonth.value,
+            year: item?.nam_chamcong || selectedYear.value
+          }
+        })
     } else {
       julyAttendances.value = []
     }
@@ -138,25 +146,33 @@ watch([selectedMonth, selectedYear], fetchChamCongChiTiet)
 const staffs = computed<StaffSummaryItem[]>(() => {
   const staffMap = new Map<string, { id: string; name: string; months: number[] }>()
 
-  julyAttendances.value.forEach((item) => {
-    if (!item.name) return
-    const nameKey = item.name.trim().toLowerCase()
-    const salaryNum = salaryToNumber(item.salary)
+  julyAttendances.value
+    .filter(item => {
+      // ✅ Chỉ lấy nhân sự có tên
+      if (!item.name) return false
+      // ✅ Chỉ lấy tháng/năm được chọn
+      const itemMonth = Number(item.month) || selectedMonth.value
+      const itemYear = Number(item.year) || selectedYear.value
+      return itemMonth === selectedMonth.value && itemYear === selectedYear.value
+    })
+    .forEach((item) => {
+      const nameKey = item.name.trim().toLowerCase()
+      const salaryNum = salaryToNumber(item.salary)
 
-    if (!staffMap.has(nameKey)) {
-      staffMap.set(nameKey, {
-        id: item.id || 'NS',
-        name: item.name,
-        months: Array(12).fill(0)
-      })
-    }
+      if (!staffMap.has(nameKey)) {
+        staffMap.set(nameKey, {
+          id: item.id || 'NS',
+          name: item.name,
+          months: Array(12).fill(0)
+        })
+      }
 
-    const currentStaff = staffMap.get(nameKey)!
-    if (item.id && currentStaff.id === 'NS') currentStaff.id = item.id
+      const currentStaff = staffMap.get(nameKey)!
+      if (item.id && currentStaff.id === 'NS') currentStaff.id = item.id
 
-    const mIdx = Number(item.month) ? Number(item.month) - 1 : selectedMonth.value - 1
-    if (mIdx >= 0 && mIdx < 12) currentStaff.months[mIdx] += salaryNum
-  })
+      // ✅ Tháng luôn là selectedMonth vì đã filter trước
+      currentStaff.months[selectedMonth.value - 1] += salaryNum
+    })
 
   return Array.from(staffMap.values()).map((s) => {
     const total = s.months.reduce((acc, curr) => acc + curr, 0)
@@ -550,7 +566,7 @@ const toggleSortDate = () => {
 .attendance-table tbody tr:nth-child(even) td.col-name--sticky { background: #fff8f8; }
 
 /* Width cột sau khi bỏ Mã NS */
-.col-name { width: 10%; }   /* bé lại theo yêu cầu */
+.col-name { width: 10%; }
 .col-show { width: 22%; }
 .col-date { width: 16%; }
 .col-role { width: 16%; }

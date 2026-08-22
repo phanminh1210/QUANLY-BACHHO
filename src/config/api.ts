@@ -1,5 +1,5 @@
 export const API_BASE_URL =
-  'https://script.google.com/macros/s/AKfycbz_ji0izoIeonVDM3EF3cf3Hidw9jIzModleRJwi32c99fnXeq-8ZYS-e4NPsk4rVf-uQ/exec'
+  'https://script.google.com/macros/s/AKfycbwqiYH9SA6ScI0muado8_o0uHMCHi4sy2hXhjZAlNMdg_V-qZaSq1UF6rDI2rXMpiSIwg/exec'
 
 export const API_ENDPOINTS = {
   BASE: API_BASE_URL,
@@ -35,15 +35,25 @@ export const API_ENDPOINTS = {
   DELETE_SHOW: (ma_show: string) =>
     `${API_BASE_URL}?action=xoa_show&ma_show=${encodeURIComponent(ma_show)}`,
 
+  GET_NHAN_SU_BY_TAI_KHOAN: (tai_khoan: string) =>
+    `${API_BASE_URL}?action=get_nhan_su_by_tai_khoan&tai_khoan=${encodeURIComponent(tai_khoan)}`,
+
+  DOI_MAT_KHAU_BY_NV: (ma_ns: string, mat_khau_moi: string) =>
+    `${API_BASE_URL}?action=doi_mat_khau_by_nv&ma_ns=${encodeURIComponent(ma_ns)}&mat_khau_moi=${encodeURIComponent(mat_khau_moi)}`,
+
+  CAPNHAT_THONGTIN_NHANSU_BY_NV: (payload: {
+    ma_ns: string; ten_ns: string; nam_sinh: string; dia_chi: string; sdt: string
+  }) =>
+    `${API_BASE_URL}?action=capnhat_thongtin_nhansu_by_nv` +
+    `&ma_ns=${encodeURIComponent(payload.ma_ns)}` +
+    `&ten_ns=${encodeURIComponent(payload.ten_ns)}` +
+    `&nam_sinh=${encodeURIComponent(payload.nam_sinh)}` +
+    `&dia_chi=${encodeURIComponent(payload.dia_chi)}` +
+    `&sdt=${encodeURIComponent(payload.sdt)}`,
+
   UPDATE_SHOW: (payload: {
-    ma_show: string
-    ten_show?: string
-    ngay?: string
-    gio?: string
-    diachi?: string
-    ten_khachhang?: string
-    sdt?: string
-    ma_loai_show?: string
+    ma_show: string; ten_show?: string; ngay?: string; gio?: string
+    diachi?: string; ten_khachhang?: string; sdt?: string; ma_loai_show?: string
   }) => [
     `${API_BASE_URL}?action=update_show`,
     `ma_show=${encodeURIComponent(payload.ma_show || '')}`,
@@ -57,39 +67,25 @@ export const API_ENDPOINTS = {
   ].join('&'),
 
   ADD_NHAN_SU: (payload: {
-    ten_ns: string
-    dob: string
-    dia_chi: string
-    sdt?: string
-    ghi_chu?: string
+    ten_ns: string; dob: string; dia_chi: string; sdt?: string; ghi_chu?: string
   }) =>
-    `${API_BASE_URL}?action=add_nhan_su&ten_ns=${encodeURIComponent(payload.ten_ns)}&dob=${encodeURIComponent(payload.dob)}&dia_chi=${encodeURIComponent(payload.dia_chi)}&sdt=${encodeURIComponent(payload.sdt || '')}&ghi_chu=${encodeURIComponent(payload.ghi_chu || '')}`,
+    `${API_BASE_URL}?action=add_nhan_su` +
+    `&ten_ns=${encodeURIComponent(payload.ten_ns)}` +
+    `&dob=${encodeURIComponent(payload.dob)}` +
+    `&dia_chi=${encodeURIComponent(payload.dia_chi)}` +
+    `&sdt=${encodeURIComponent(payload.sdt || '')}` +
+    `&ghi_chu=${encodeURIComponent(payload.ghi_chu || '')}`,
 
   DELETE_NHAN_SU: (ma_ns: string) =>
     `${API_BASE_URL}?action=delete_nhan_su&ma_ns=${encodeURIComponent(ma_ns)}`,
 
   ADD_SHOW_AND_CHAMCONG_CHITIET: (payload: {
-    ten_show: string
-    ma_loai_show?: string
-    ngay: string
-    gio?: string
-    diachi: string
-    ten_khachhang?: string
-    sdt?: string
-    so_lan?: number
-    co_trong?: boolean
-    co_than_tai?: boolean
-    co_xoa?: boolean
-    co_lo?: boolean
-    co_trong_hoi?: boolean
-    so_trong_hoi?: number
-    co_rong_don?: boolean
-    co_rong_gay?: boolean
-    co_rong_khuc?: boolean
-    so_rong_khuc?: number
-    co_ngo_khong?: boolean
-    co_bat_gioi?: boolean
-    co_ong_dia?: boolean
+    ten_show: string; ma_loai_show?: string; ngay: string; gio?: string
+    diachi: string; ten_khachhang?: string; sdt?: string; so_lan?: number
+    co_trong?: boolean; co_than_tai?: boolean; co_xoa?: boolean; co_lo?: boolean
+    co_trong_hoi?: boolean; so_trong_hoi?: number; co_rong_don?: boolean
+    co_rong_gay?: boolean; co_rong_khuc?: boolean; so_rong_khuc?: number
+    co_ngo_khong?: boolean; co_bat_gioi?: boolean; co_ong_dia?: boolean
   }) => {
     const q = [
       `action=add_show_and_chamcong_chitiet`,
@@ -117,4 +113,66 @@ export const API_ENDPOINTS = {
     ].join('&')
     return `${API_BASE_URL}?${q}`
   },
+
+  // Cập nhật lương + ghi chú theo ten_ns (dùng khi lần đầu đổi sang đã diễn)
+  CAPNHAT_LUONG_GHICHU_CHAMCONG: (payload: {
+    ma_show: string; ten_ns: string; luong: string; ghi_chu: string
+    thang?: string; nam?: string
+  }) =>
+    `${API_BASE_URL}?action=capnhat_luong_ghichu_chamcong` +
+    `&ma_show=${encodeURIComponent(payload.ma_show)}` +
+    `&ten_ns=${encodeURIComponent(payload.ten_ns)}` +
+    `&luong=${encodeURIComponent(payload.luong)}` +
+    `&ghi_chu=${encodeURIComponent(payload.ghi_chu)}` +
+    `&thang=${encodeURIComponent(payload.thang || '')}` +
+    `&nam=${encodeURIComponent(payload.nam || '')}`,
+
+  // Cập nhật theo row index — tránh nhầm khi nhiều dòng trùng tên
+  CAPNHAT_CHAMCONG_THEO_INDEX: (payload: {
+    ma_show: string; row_index: number
+    ten_ns: string; vai_tro: string; luong: string; ghi_chu: string
+  }) =>
+    `${API_BASE_URL}?action=capnhat_chamcong_theo_index` +
+    `&ma_show=${encodeURIComponent(payload.ma_show)}` +
+    `&row_index=${encodeURIComponent(String(payload.row_index))}` +
+    `&ten_ns=${encodeURIComponent(payload.ten_ns)}` +
+    `&vai_tro=${encodeURIComponent(payload.vai_tro)}` +
+    `&luong=${encodeURIComponent(payload.luong)}` +
+    `&ghi_chu=${encodeURIComponent(payload.ghi_chu)}`,
+
+  // Thêm nhân sự mới vào show (append row)
+  THEM_NHAN_SU_VAO_SHOW: (payload: {
+    ma_show: string; ten_show: string; ngay: string
+    ten_ns: string; vai_tro: string; luong: string
+    ghi_chu: string; thang: string; nam: string
+  }) =>
+    `${API_BASE_URL}?action=them_nhan_su_vao_show` +
+    `&ma_show=${encodeURIComponent(payload.ma_show)}` +
+    `&ten_show=${encodeURIComponent(payload.ten_show)}` +
+    `&ngay=${encodeURIComponent(payload.ngay)}` +
+    `&ten_ns=${encodeURIComponent(payload.ten_ns)}` +
+    `&vai_tro=${encodeURIComponent(payload.vai_tro)}` +
+    `&luong=${encodeURIComponent(payload.luong)}` +
+    `&ghi_chu=${encodeURIComponent(payload.ghi_chu)}` +
+    `&thang=${encodeURIComponent(payload.thang)}` +
+    `&nam=${encodeURIComponent(payload.nam)}`,
+
+  // Cập nhật tên NS trong chamcongchitiet
+  CAPNHAT_TEN_NS_TRONG_CHAMCONG: (ma_show: string, ten_ns_cu: string, ten_ns_moi: string) =>
+    `${API_BASE_URL}?action=capnhat_ten_ns_trong_chamcong` +
+    `&ma_show=${encodeURIComponent(ma_show)}` +
+    `&ten_ns_cu=${encodeURIComponent(ten_ns_cu)}` +
+    `&ten_ns_moi=${encodeURIComponent(ten_ns_moi)}`,
+
+  // Cập nhật vai trò trong chamcongchitiet
+  CAPNHAT_VAITRO_TRONG_CHAMCONG: (ma_show: string, ten_ns: string, vai_tro_moi: string) =>
+    `${API_BASE_URL}?action=capnhat_vaitro_trong_chamcong` +
+    `&ma_show=${encodeURIComponent(ma_show)}` +
+    `&ten_ns=${encodeURIComponent(ten_ns)}` +
+    `&vai_tro_moi=${encodeURIComponent(vai_tro_moi)}`,
+
+    XOA_NHAN_SU_KHOI_SHOW: (ma_show: string, row_index: number) =>
+  `${API_BASE_URL}?action=xoa_nhan_su_khoi_show` +
+  `&ma_show=${encodeURIComponent(ma_show)}` +
+  `&row_index=${encodeURIComponent(String(row_index))}`,
 }
