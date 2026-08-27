@@ -83,7 +83,7 @@
           </div>
         </div>
         <div class="modal-actions">
-          <button class="btn btn--red"  :disabled="submitting" type="button" @click="submitAuth">
+          <button class="btn btn--red" :disabled="submitting" type="button" @click="submitAuth">
             {{ submitting ? 'Đang xác nhận...' : 'Xác nhận' }}
           </button>
           <button class="btn btn--gray" :disabled="submitting" type="button" @click="closeAuth">Hủy</button>
@@ -91,7 +91,7 @@
       </div>
     </div>
 
-    <!-- MODAL CẬP NHẬT THÔNG TIN (không có tên) -->
+    <!-- MODAL CẬP NHẬT THÔNG TIN -->
     <div v-if="editModal" class="modal-overlay" @click="!submitting && closeEditInfo()">
       <div class="modal-box" @click.stop>
         <h3 class="modal-title">✏️ Cập nhật thông tin</h3>
@@ -110,7 +110,7 @@
           </div>
         </div>
         <div class="modal-actions">
-          <button class="btn btn--green" :disabled="submitting" type="button" @click="submitEditInfo">
+          <button class="btn btn--red" :disabled="submitting" type="button" @click="submitEditInfo">
             {{ submitting ? 'Đang lưu...' : 'Lưu' }}
           </button>
           <button class="btn btn--gray" :disabled="submitting" type="button" @click="closeEditInfo">Hủy</button>
@@ -136,7 +136,7 @@
           </div>
         </div>
         <div class="modal-actions">
-          <button class="btn btn--green" :disabled="submitting" type="button" @click="submitChangePass">
+          <button class="btn btn--red" :disabled="submitting" type="button" @click="submitChangePass">
             {{ submitting ? 'Đang lưu...' : 'Lưu' }}
           </button>
           <button class="btn btn--gray" :disabled="submitting" type="button" @click="closeChangePass">Hủy</button>
@@ -172,7 +172,6 @@ const authPass   = ref('')
 const authError  = ref('')
 const authTarget = ref<'edit' | 'pass' | null>(null)
 
-// ✅ Bỏ ten_ns khỏi editForm
 const editModal = ref(false)
 const editForm  = ref({ nam_sinh: '', dia_chi: '', sdt: '' })
 
@@ -209,7 +208,6 @@ const submitAuth = async () => {
     }
     authModal.value = false
     if (authTarget.value === 'edit') {
-      // ✅ Bỏ ten_ns
       editForm.value  = { nam_sinh: info.value.nam_sinh || '', dia_chi: info.value.dia_chi || '', sdt: info.value.sdt || '' }
       editModal.value = true
     } else {
@@ -253,7 +251,6 @@ const fetchInfo = async () => {
   finally { loading.value = false }
 }
 
-// ✅ ten_ns lấy từ info.value — không cho sửa
 const submitEditInfo = async () => {
   if (!info.value) return
   submitting.value = true
@@ -275,7 +272,7 @@ const submitEditInfo = async () => {
 
 const submitChangePass = async () => {
   passError.value = ''
-  if (!passForm.value.moi)                           { passError.value = 'Vui lòng nhập mật khẩu mới!'; return }
+  if (!passForm.value.moi)                            { passError.value = 'Vui lòng nhập mật khẩu mới!'; return }
   if (passForm.value.moi !== passForm.value.xacNhan) { passError.value = 'Mật khẩu xác nhận không khớp!'; return }
   if (!info.value) return
   submitting.value = true
@@ -329,7 +326,17 @@ onMounted(fetchInfo)
 .modal-fields  { display: flex; flex-direction: column; gap: 10px; }
 .modal-field   { display: flex; flex-direction: column; gap: 3px; }
 .modal-label   { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; }
-.modal-input   { border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 7px 10px; font-size: 13px; color: #1e293b; outline: none; transition: border-color .15s; }
+
+/* Bổ sung font-size: 16px để chống tự động zoom trên iOS/Android Mobile */
+.modal-input   { 
+  border: 1.5px solid #e2e8f0; 
+  border-radius: 8px; 
+  padding: 8px 10px; 
+  font-size: 16px; 
+  color: #1e293b; 
+  outline: none; 
+  transition: border-color .15s; 
+}
 .modal-input:focus    { border-color: #2563eb; }
 .modal-input--error   { border-color: #dc2626 !important; }
 .modal-error          { font-size: 11px; font-weight: 600; color: #dc2626; }

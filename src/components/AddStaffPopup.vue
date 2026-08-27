@@ -225,41 +225,38 @@ const validateForm = () => {
 const submitForm = async () => {
   if (!validateForm() || isSubmitting.value) return
   isSubmitting.value = true
-  showTopLoading('Đang lưu...', 1000)
+  showTopLoading('Đang lưu...', 3000)
 
   try {
-    const dob = `${form.birthYear}-01-01`
-
-    let url = API_ENDPOINTS.ADD_NHAN_SU({
-      ten_ns: form.name,
-      dob,
-      dia_chi: form.address,
-      sdt: form.phone || '',
-      ghi_chu: form.ghi_chu || '',
+    const url = API_ENDPOINTS.THEM_NHAN_SU({
+      ten_ns:    form.name,
+      nam_sinh:  form.birthYear,
+      dia_chi:   form.address,
+      sdt:       form.phone       || '',
+      tai_khoan: form.tai_khoan   || '',
+      mat_khau:  form.mat_khau    || '',
+      vai_tro:   form.vai_tro,
+      quyen:     isRoleAdmin.value ? '' : (form.quyen || ''),
+      ghi_chu:   form.ghi_chu     || '',
     })
 
-    url += `&tai_khoan=${encodeURIComponent(form.tai_khoan || '')}`
-    url += `&mat_khau=${encodeURIComponent(form.mat_khau || '')}`
-    url += `&vai_tro=${encodeURIComponent(form.vai_tro || '')}`
-    url += `&quyen=${encodeURIComponent(isRoleAdmin.value ? '' : form.quyen || '')}`
+    const res  = await fetch(url, { redirect: 'follow' })
+    const text = await res.text()
+    const json = JSON.parse(text)
 
-    const res = await fetch(url, { method: 'GET' })
-    if (!res.ok) throw new Error(`HTTP ${res.status}`)
-
-    const json = await res.json()
-    const ok = json?.code === 200 || json?.status === 'success'
-    if (!ok) throw new Error(json?.message || 'Thêm nhân sự thất bại')
-
-    await new Promise((r) => setTimeout(r, 1000))
+    if (!(json?.code === 200 || json?.status === 'success' || json?.success === true)) {
+      throw new Error(json?.message || 'Thêm nhân sự thất bại')
+    }
 
     resetForm()
     emit('saved')
     emit('close')
-    showSuccessToast('Thêm nhân sự thành công')
+    showSuccessToast('Thêm nhân sự thành công!')
   } catch (e: any) {
     alert(e?.message || 'Lưu thất bại')
   } finally {
     isSubmitting.value = false
+    topLoading.show = false
   }
 }
 

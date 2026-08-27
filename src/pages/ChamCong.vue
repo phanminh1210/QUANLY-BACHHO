@@ -1,7 +1,5 @@
-// chamcong.vue
-
 <script setup lang="ts">
-import { computed, ref, onMounted, watch } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import { API_ENDPOINTS } from '../config/api'
 
 interface AttendanceItem {
@@ -13,8 +11,8 @@ interface AttendanceItem {
   role: string
   salary: string
   note: string
-  month: string | number
-  year: string | number
+  month: number
+  year: number
 }
 
 interface StaffSummaryItem {
@@ -59,6 +57,20 @@ const selectedShowJuly = ref('Tất cả show')
 const sortJulyShowOrder = ref<'none' | 'asc' | 'desc'>('none')
 const sortJulyDateOrder = ref<'none' | 'asc' | 'desc'>('none')
 
+// Hàm lấy ten_ns từ localStorage (key 'user')
+const getTenNsFromLocalStorage = (): string => {
+  try {
+    const userStr = localStorage.getItem('user')
+    if (userStr) {
+      const userObj = JSON.parse(userStr)
+      return userObj?.ten_ns || ''
+    }
+  } catch (e) {
+    console.error('Lỗi khi đọc user từ localStorage:', e)
+  }
+  return ''
+}
+
 const salaryToNumber = (salary: unknown) => {
   if (typeof salary === 'number') return Number.isFinite(salary) ? salary : 0
 
@@ -93,11 +105,20 @@ const parseDateTs = (workDate: string) => {
   return Number.isNaN(d.getTime()) ? 0 : d.getTime()
 }
 
+// Gọi API và tự phân tích dữ liệu Tháng/Năm trên Frontend
 const fetchChamCongChiTiet = async () => {
   loading.value = true
   errorMsg.value = ''
   try {
-    const url = API_ENDPOINTS.CHAM_CONG_CHI_TIET(selectedMonth.value, selectedYear.value)
+    let nameParam = ''
+    if (selectedNameJuly.value !== 'Tất cả') {
+      nameParam = selectedNameJuly.value
+    } else {
+      nameParam = getTenNsFromLocalStorage()
+    }
+
+    const url = API_ENDPOINTS.LAY_SHOW_THEO_NHAN_SU(nameParam)
+
     const response = await fetch(url)
     if (!response.ok) throw new Error(`HTTP ${response.status}`)
 
@@ -108,24 +129,46 @@ const fetchChamCongChiTiet = async () => {
 
     if ((res?.code === 200 || res?.status === 'success') && Array.isArray(res?.data)) {
       julyAttendances.value = res.data
-        .filter((item: any) => {
-          // ✅ Chỉ lấy dòng có tên NS
-          const tenNS = (item?.ten_ns || '').toString().trim()
-          return tenNS !== ''
-        })
+        .filter((item: any) => (item?.ten_ns || '').toString().trim() !== '')
         .map((item: any) => {
           const salaryNum = salaryToNumber(item?.luong)
+          const workDateStr = (item?.ngay_lamviec || item?.ngay || '').toString()
+
+          // Tự bóc tách Tháng và Năm từ chuỗi Ngày làm việc nếu API không trả về
+          let m = selectedMonth.value
+          let y = selectedYear.value
+
+          if (item?.thang_chamcong) {
+            m = Number(item.thang_chamcong)
+          } else if (item?.thang) {
+            m = Number(item.thang)
+          } else if (workDateStr.includes('/')) {
+            const parts = workDateStr.split('/')
+            if (parts.length >= 2) m = Number(parts[1])
+            if (parts.length >= 3) y = Number(parts[2])
+          } else if (workDateStr.includes('-')) {
+            const parts = workDateStr.split('T')[0].split('-')
+            if (parts.length >= 1) y = Number(parts[0])
+            if (parts.length >= 2) m = Number(parts[1])
+          }
+
+          if (item?.nam_chamcong) {
+            y = Number(item.nam_chamcong)
+          } else if (item?.nam) {
+            y = Number(item.nam)
+          }
+
           return {
             id: (item?.ma_ns || '').toString().trim(),
             name: (item?.ten_ns || '').toString().trim(),
             showId: (item?.ma_show || '').toString().trim(),
             showName: (item?.ten_show || '').toString().trim(),
-            workDate: (item?.ngay_lamviec || '').toString(),
+            workDate: workDateStr,
             role: (item?.vai_tro || '').toString(),
             salary: formatMoney(salaryNum),
             note: (item?.ghi_chu || item?.['ghi chu'] || '').toString(),
-            month: item?.thang_chamcong || selectedMonth.value,
-            year: item?.nam_chamcong || selectedYear.value
+            month: m,
+            year: y
           }
         })
     } else {
@@ -141,19 +184,14 @@ const fetchChamCongChiTiet = async () => {
 }
 
 onMounted(fetchChamCongChiTiet)
-watch([selectedMonth, selectedYear], fetchChamCongChiTiet)
 
 const staffs = computed<StaffSummaryItem[]>(() => {
   const staffMap = new Map<string, { id: string; name: string; months: number[] }>()
 
   julyAttendances.value
     .filter(item => {
-      // ✅ Chỉ lấy nhân sự có tên
       if (!item.name) return false
-      // ✅ Chỉ lấy tháng/năm được chọn
-      const itemMonth = Number(item.month) || selectedMonth.value
-      const itemYear = Number(item.year) || selectedYear.value
-      return itemMonth === selectedMonth.value && itemYear === selectedYear.value
+      return Number(item.month) === Number(selectedMonth.value) && Number(item.year) === Number(selectedYear.value)
     })
     .forEach((item) => {
       const nameKey = item.name.trim().toLowerCase()
@@ -170,7 +208,6 @@ const staffs = computed<StaffSummaryItem[]>(() => {
       const currentStaff = staffMap.get(nameKey)!
       if (item.id && currentStaff.id === 'NS') currentStaff.id = item.id
 
-      // ✅ Tháng luôn là selectedMonth vì đã filter trước
       currentStaff.months[selectedMonth.value - 1] += salaryNum
     })
 
@@ -201,16 +238,26 @@ const allJulyShows = computed(() => [...new Set(julyAttendances.value.map((item)
 
 const filteredStaffs = computed(() => staffs.value)
 
+// Lọc dữ liệu thuần ở Frontend
 const filteredAndSortedJulyAttendances = computed(() => {
   let data = [...julyAttendances.value]
 
+  // Lọc theo Tháng & Năm
+  data = data.filter((item) => {
+    return Number(item.month) === Number(selectedMonth.value) && Number(item.year) === Number(selectedYear.value)
+  })
+
+  // Lọc theo Tên nhân sự
   if (selectedNameJuly.value !== 'Tất cả') {
-    data = data.filter((item) => item.name === selectedNameJuly.value)
+    data = data.filter((item) => item.name.toLowerCase() === selectedNameJuly.value.toLowerCase())
   }
+
+  // Lọc theo Show
   if (selectedShowJuly.value !== 'Tất cả show') {
     data = data.filter((item) => item.showName === selectedShowJuly.value)
   }
 
+  // Sắp xếp
   data.sort((a, b) => {
     if (sortJulyDateOrder.value !== 'none') {
       const d = parseDateTs(a.workDate) - parseDateTs(b.workDate)
@@ -234,9 +281,11 @@ const totalSalary = computed(() => {
 })
 
 const toggleFilterJuly = () => { showFilterJuly.value = !showFilterJuly.value }
+
 const selectFilterJuly = (name: string) => {
   selectedNameJuly.value = name
   showFilterJuly.value = false
+  fetchChamCongChiTiet()
 }
 
 const toggleFilterShow = () => { showFilterShow.value = !showFilterShow.value }
@@ -264,7 +313,7 @@ const toggleSortDate = () => {
     </section>
 
     <section class="chamcong-page__content">
-      <!-- BẢNG TRÊN: bỏ cột Mã NS, giữ kéo ngang, Tên NS luôn thấy -->
+      <!-- BẢNG TRÊN: Tổng hợp theo tháng -->
       <div class="table-card">
         <div class="table-wrapper table-wrapper--half">
           <table class="attendance-table">
@@ -521,12 +570,10 @@ const toggleSortDate = () => {
 .table-wrapper--july { overflow: hidden; margin-top: 16px; }
 
 .attendance-table, .monthly-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-/* Bảng trên mobile */
 .attendance-table {
-  min-width: 980px; /* giảm từ 1200/1300 để cột co theo */
+  min-width: 980px;
 }
 
-/* ép cột Tên NS nhỏ thật sự */
 .attendance-table th.col-name--sticky,
 .attendance-table td.col-name--sticky {
   width: 80px !important;
@@ -534,7 +581,6 @@ const toggleSortDate = () => {
   max-width: 80px !important;
 }
 
-/* cho chữ gọn */
 .attendance-table td.col-name--sticky {
   white-space: nowrap;
   overflow: hidden;
@@ -550,7 +596,6 @@ const toggleSortDate = () => {
 .attendance-table tbody tr:nth-child(even),
 .monthly-table tbody tr:nth-child(even) { background: #fff8f8; }
 
-/* Sticky cột Tên NS cho bảng trên để kéo ngang không bị mất */
 .attendance-table th.col-name--sticky,
 .attendance-table td.col-name--sticky {
   position: sticky;
@@ -565,7 +610,6 @@ const toggleSortDate = () => {
 .attendance-table tbody tr:nth-child(odd) td.col-name--sticky { background: #fff; }
 .attendance-table tbody tr:nth-child(even) td.col-name--sticky { background: #fff8f8; }
 
-/* Width cột sau khi bỏ Mã NS */
 .col-name { width: 10%; }
 .col-show { width: 22%; }
 .col-date { width: 16%; }

@@ -3,7 +3,16 @@
     <div class="header__left">
       <router-link to="/" class="header__brand">
         <img :src="logo" alt="Bạch Hổ Đường" class="header__logo" />
-        <span class="header__title">BẠCH HỔ ĐƯỜNG</span>
+        <div class="header__brand-info">
+          <span class="header__title">BẠCH HỔ ĐƯỜNG</span>
+          <div class="header__user-sub">
+            <span
+              class="status-dot"
+              :class="isLoggedIn ? 'status-dot--online' : 'status-dot--offline'"
+            ></span>
+            <span class="header__user-subname">{{ displayName }}</span>
+          </div>
+        </div>
       </router-link>
     </div>
 
@@ -22,24 +31,27 @@
 
       <transition name="pop">
         <nav v-if="isMenuOpen" class="header__popup">
-
           <!-- Tài khoản — luôn hiển thị trên cùng -->
-          <router-link to="/tai-khoan" class="header__popup-item header__popup-item--account" @click="closeMenu">
+          <router-link
+            to="/tai-khoan"
+            class="header__popup-item header__popup-item--account"
+            @click="closeMenu"
+          >
             <span class="account-icon">👤</span>
             <span>{{ displayName }}</span>
           </router-link>
 
           <div class="header__popup-divider" />
 
-          <router-link to="/"                class="header__popup-item" @click="closeMenu">Trang chủ</router-link>
+          <router-link to="/" class="header__popup-item" @click="closeMenu">Trang chủ</router-link>
           <router-link to="/tat-ca-lich-dien" class="header__popup-item" @click="closeMenu">Tất cả lịch diễn</router-link>
-          <router-link to="/show-chua-dien"   class="header__popup-item" @click="closeMenu">Show chưa diễn</router-link>
-          <router-link to="/show-da-dien"     class="header__popup-item" @click="closeMenu">Show đã diễn</router-link>
-          <router-link to="/cham-cong"        class="header__popup-item" @click="closeMenu">Danh sách chấm công</router-link>
+          <router-link to="/show-chua-dien" class="header__popup-item" @click="closeMenu">Show chưa diễn</router-link>
+          <router-link to="/show-da-dien" class="header__popup-item" @click="closeMenu">Show đã diễn</router-link>
+          <router-link to="/cham-cong" class="header__popup-item" @click="closeMenu">Danh sách chấm công</router-link>
 
           <!-- Chỉ admin -->
           <template v-if="isAdmin">
-            <router-link to="/nhan-su"   class="header__popup-item" @click="closeMenu">Thông tin nhân sự</router-link>
+            <router-link to="/nhan-su" class="header__popup-item" @click="closeMenu">Thông tin nhân sự</router-link>
             <router-link to="/khach-hang" class="header__popup-item" @click="closeMenu">Thông tin khách hàng</router-link>
           </template>
 
@@ -60,9 +72,9 @@ import { useRouter } from 'vue-router'
 import logo from '../assets/logo 2008.jpg'
 import { getUserField } from '../utils/auth'
 
-const router     = useRouter()
+const router = useRouter()
 const isMenuOpen = ref(false)
-const headerRef  = ref<HTMLElement | null>(null)
+const headerRef = ref<HTMLElement | null>(null)
 
 // ── Admin check ───────────────────────────────────────────
 const isAdmin = computed(() => {
@@ -89,11 +101,16 @@ const displayName = computed(() => {
       return String(p.ten_ns || p.ten || p.name || p.tai_khoan || 'Tài khoản').trim()
     } catch {}
   }
-  return 'Tài khoản'
+  return 'Chưa đăng nhập'
+})
+
+// ── Trạng thái đăng nhập ──────────────────────────────────
+const isLoggedIn = computed(() => {
+  return displayName.value !== 'Chưa đăng nhập'
 })
 
 const toggleMenu = () => { isMenuOpen.value = !isMenuOpen.value }
-const closeMenu  = () => { isMenuOpen.value = false }
+const closeMenu = () => { isMenuOpen.value = false }
 
 const handleLogout = () => {
   closeMenu()
@@ -119,10 +136,56 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside))
   background: #ba0000; box-sizing: border-box; z-index: 100;
 }
 
-.header__left   { display: flex; align-items: center; }
-.header__brand  { display: flex; align-items: center; gap: 12px; text-decoration: none; }
-.header__logo   { width: 42px; height: 42px; object-fit: cover; border-radius: 50%; border: 2px solid #ffd700; }
-.header__title  { font-size: 14px; font-weight: 700; letter-spacing: 0.5px; color: #fff; }
+.header__left { display: flex; align-items: center; }
+.header__brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+.header__logo { width: 42px; height: 42px; object-fit: cover; border-radius: 50%; border: 2px solid #ffd700; flex-shrink: 0; }
+
+.header__brand-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  line-height: 1.25;
+}
+
+.header__title { font-size: 14px; font-weight: 700; letter-spacing: 0.5px; color: #fff; }
+
+.header__user-sub {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 2px;
+}
+
+/* Base Dot */
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Chấm xanh khi đã đăng nhập */
+.status-dot--online {
+  background-color: #22c55e;
+  box-shadow: 0 0 4px rgba(34, 197, 94, 0.6);
+}
+
+/* Chấm đỏ khi chưa đăng nhập */
+.status-dot--offline {
+  background-color: #ef4444;
+  box-shadow: 0 0 4px rgba(239, 68, 68, 0.6);
+}
+
+.header__user-subname {
+  font-size: 11px;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.7);
+  max-width: 150px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
 .header__menu-wrapper { position: relative; }
 
@@ -146,7 +209,6 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside))
   display: flex; flex-direction: column; overflow: hidden;
 }
 
-/* ── Tài khoản row ── */
 .header__popup-item--account {
   display: flex; align-items: center; gap: 8px;
   background: #fff8f0; color: #8f0000 !important;
@@ -172,7 +234,6 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside))
 .header__popup-item--logout { color: #d32f2f; border-top: 2px solid #f0f0f0; }
 .header__popup-item--logout:hover { background: #d32f2f; color: #fff; }
 
-/* ── Transition ── */
 .pop-enter-active, .pop-leave-active { transition: all .2s ease; }
-.pop-enter-from,   .pop-leave-to     { opacity: 0; transform: translateY(-6px); }
+.pop-enter-from, .pop-leave-to { opacity: 0; transform: translateY(-6px); }
 </style>

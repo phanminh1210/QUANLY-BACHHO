@@ -3,8 +3,7 @@
     <div class="login__card">
       <div class="login__logoWrap">
         <img :src="logo" alt="Logo" class="login__logo" />
-        <h1 class="login__title">BẠCH HỔ ĐƯỜNG</h1>
-        <p class="login__subtitle">Đăng nhập vào hệ thống</p>
+        <h1 class="login__title">Bach Ho Duong Lion</h1>
       </div>
 
       <form class="login__form" @submit.prevent="handleLogin">
@@ -31,7 +30,9 @@
         </div>
 
         <button class="login__button" type="submit" :disabled="loading">
-          {{ loading ? 'Đang đăng nhập...' : 'Đăng nhập' }}
+          <span class="login__buttonText">
+            {{ loading ? 'Đang đăng nhập...' : 'Đăng nhập' }}
+          </span>
         </button>
 
         <p v-if="errorMsg" class="login__error">{{ errorMsg }}</p>
@@ -63,7 +64,6 @@ const handleLogin = async () => {
 
   loading.value = true
   try {
-    // Ưu tiên dùng endpoint LOGIN nếu có trong api.ts
     const loginUrl =
       (API_ENDPOINTS as any).LOGIN
         ? (API_ENDPOINTS as any).LOGIN(username.value, password.value)
@@ -80,15 +80,12 @@ const handleLogin = async () => {
       return
     }
 
-    // Lưu thông tin đăng nhập
     localStorage.setItem('token', 'logged_in')
     localStorage.setItem('user', JSON.stringify(json?.data || {}))
     localStorage.setItem('tai_khoan', String(json?.data?.tai_khoan || ''))
     localStorage.setItem('vai_tro', String(json?.data?.vai_tro || ''))
     localStorage.setItem('quyen', String(json?.data?.quyen || ''))
 
-    // Điều hướng về trang chủ
-    // Router của bạn hiện tại dùng '/home' (nếu sau này đổi thì sửa lại)
     await router.push('/home')
   } catch (err: any) {
     errorMsg.value = err?.message || 'Đăng nhập thất bại'
@@ -105,19 +102,19 @@ const handleLogin = async () => {
   place-items: center;
   padding: 20px;
   background:
-    radial-gradient(circle at 20% 20%, rgba(255,255,255,.18), transparent 35%),
-    radial-gradient(circle at 80% 80%, rgba(255,255,255,.12), transparent 35%),
+    radial-gradient(circle at 20% 20%, rgba(255,255,255,.14), transparent 35%),
+    radial-gradient(circle at 80% 80%, rgba(255,255,255,.10), transparent 35%),
     linear-gradient(135deg, #4b0000 0%, #8f0000 45%, #c40000 100%);
 }
 
 .login__card {
   width: 100%;
-  max-width: 360px;
-  background: rgba(255, 255, 255, 0.97);
+  max-width: 380px;
+  background: rgba(255, 236, 236, 0.96); /* đỏ nhạt */
+  border: 1px solid rgba(255, 214, 214, 0.9);
   border-radius: 18px;
-  padding: 20px 18px 18px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, .28);
-  border: 1px solid rgba(255,255,255,.6);
+  padding: 22px 18px 18px;
+  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.22);
   backdrop-filter: blur(2px);
 }
 
@@ -127,33 +124,27 @@ const handleLogin = async () => {
 }
 
 .login__logo {
-  width: 72px;
-  height: 72px;
+  width: 70px;
+  height: 70px;
   object-fit: cover;
   border-radius: 50%;
   display: block;
   margin: 0 auto 10px;
-  border: 4px solid #f3e7a8;
+  border: 3px solid #fff;
+  box-shadow: 0 4px 10px rgba(143, 0, 0, 0.15);
 }
 
 .login__title {
   margin: 0;
-  font-size: 34px;
-  line-height: 1;
-  font-weight: 900;
+  font-size: 24px; /* chữ nhỏ hơn */
+  line-height: 1.15;
+  font-weight: 800;
   color: #7a0000;
-  letter-spacing: 1px;
-}
-
-.login__subtitle {
-  margin: 6px 0 0;
-  font-size: 13px;
-  color: #9b7d00;
-  font-weight: 700;
+  letter-spacing: 0.2px;
 }
 
 .login__form {
-  margin-top: 8px;
+  margin-top: 10px;
 }
 
 .login__field {
@@ -172,38 +163,55 @@ const handleLogin = async () => {
 .login__input {
   width: 100%;
   box-sizing: border-box;
-  border: 1px solid #e0dada;
-  border-radius: 14px;
+  border: 1px solid #efc9c9;
+  border-radius: 12px;
   height: 42px;
-  padding: 0 14px;
+  padding: 0 12px;
   outline: none;
-  font-size: 15px;
+  font-size: 14px;
   color: #222;
   background: #fff;
+  transition: border-color .2s, box-shadow .2s;
 }
 
 .login__input:focus {
-  border-color: #8f0000;
-  box-shadow: 0 0 0 3px rgba(143, 0, 0, .12);
+  border-color: #c24141;
+  box-shadow: 0 0 0 3px rgba(194, 65, 65, 0.14);
 }
 
 .login__button {
   width: 100%;
   height: 44px;
   border: none;
-  border-radius: 14px;
-  background: linear-gradient(180deg, #8f0000 0%, #700000 100%);
-  color: #ffd700;
-  font-size: 20px;
-  font-weight: 900;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #c53030 0%, #a61b1b 100%);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 800;
   letter-spacing: .2px;
   cursor: pointer;
-  margin-top: 2px;
+  margin-top: 4px;
+  box-shadow: 0 8px 16px rgba(166, 27, 27, 0.25);
+  transition: transform .12s ease, box-shadow .12s ease, opacity .2s;
+}
+
+.login__button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 18px rgba(166, 27, 27, 0.3);
+}
+
+.login__button:active:not(:disabled) {
+  transform: translateY(0);
 }
 
 .login__button:disabled {
-  opacity: .7;
+  opacity: .75;
   cursor: not-allowed;
+}
+
+.login__buttonText {
+  display: inline-block;
+  transform: translateY(0.5px);
 }
 
 .login__error {
@@ -212,5 +220,17 @@ const handleLogin = async () => {
   font-weight: 700;
   color: #dc2626;
   text-align: center;
+}
+
+@media (max-width: 420px) {
+  .login__card {
+    max-width: 100%;
+    padding: 18px 14px 14px;
+    border-radius: 14px;
+  }
+
+  .login__title {
+    font-size: 22px;
+  }
 }
 </style>
