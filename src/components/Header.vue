@@ -1,82 +1,77 @@
 <template>
-  <header ref="headerRef" class="header">
-    <div class="header__left">
-      <router-link to="/" class="header__brand">
-        <img :src="logo" alt="Bạch Hổ Đường" class="header__logo" />
-        <div class="header__brand-info">
-          <span class="header__title">BẠCH HỔ ĐƯỜNG</span>
-          <div class="header__user-sub">
-            <span
-              class="status-dot"
-              :class="isLoggedIn ? 'status-dot--online' : 'status-dot--offline'"
-            ></span>
-            <span class="header__user-subname">{{ displayName }}</span>
-          </div>
+  <header class="header">
+    <div class="header-container">
+      <!-- Nav Item 1: Trang chủ -->
+      <router-link to="/home" class="nav-item" exact-active-class="active">
+        <div class="icon-wrapper">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+          </svg>
         </div>
+        <span class="nav-label">Trang chủ</span>
       </router-link>
-    </div>
 
-    <div class="header__menu-wrapper">
-      <button
-        class="header__menu-btn"
-        :class="{ 'header__menu-btn--active': isMenuOpen }"
-        type="button"
-        aria-label="Open menu"
-        @click="toggleMenu"
-      >
-        <span></span>
-        <span></span>
-        <span></span>
-      </button>
+      <!-- Nav Item 2: Lịch diễn / Shows -->
+      <router-link to="/tat-ca-lich-dien" class="nav-item" active-class="active">
+        <div class="icon-wrapper">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+          </svg>
+        </div>
+        <span class="nav-label">Show diễn</span>
+      </router-link>
 
-      <transition name="pop">
-        <nav v-if="isMenuOpen" class="header__popup">
-          <!-- Tài khoản — luôn hiển thị trên cùng -->
-          <router-link
-            to="/tai-khoan"
-            class="header__popup-item header__popup-item--account"
-            @click="closeMenu"
-          >
-            <span class="account-icon">👤</span>
-            <span>{{ displayName }}</span>
-          </router-link>
+      <!-- FAB Nút Dấu Cộng: CHỈ ADMIN MỚI NHÌN THẤY -->
+      <div v-if="isAdmin" class="fab-wrapper">
+        <button
+          class="fab-btn"
+          @click="triggerOpenShow"
+          aria-label="Thêm show mới"
+        >
+          <svg class="fab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+        </button>
+      </div>
 
-          <div class="header__popup-divider" />
+      <!-- Nav Item 3: Bảng Chấm Công -->
+      <router-link to="/cham-cong" class="nav-item" active-class="active">
+        <div class="icon-wrapper">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 11l2 2 4-4"></path>
+            <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+            <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+          </svg>
+        </div>
+        <span class="nav-label">Chấm công</span>
+      </router-link>
 
-          <router-link to="/" class="header__popup-item" @click="closeMenu">Trang chủ</router-link>
-          <router-link to="/tat-ca-lich-dien" class="header__popup-item" @click="closeMenu">Tất cả lịch diễn</router-link>
-          <router-link to="/show-chua-dien" class="header__popup-item" @click="closeMenu">Show chưa diễn</router-link>
-          <router-link to="/show-da-dien" class="header__popup-item" @click="closeMenu">Show đã diễn</router-link>
-          <router-link to="/cham-cong" class="header__popup-item" @click="closeMenu">Danh sách chấm công</router-link>
-
-          <!-- Chỉ admin -->
-          <template v-if="isAdmin">
-            <router-link to="/nhan-su" class="header__popup-item" @click="closeMenu">Thông tin nhân sự</router-link>
-            <router-link to="/khach-hang" class="header__popup-item" @click="closeMenu">Thông tin khách hàng</router-link>
-          </template>
-
-          <div class="header__popup-divider" />
-
-          <button class="header__popup-item header__popup-item--logout" type="button" @click="handleLogout">
-            Đăng xuất
-          </button>
-        </nav>
-      </transition>
+      <!-- Nav Item 4: Tài khoản / Cá nhân -->
+      <router-link to="/tai-khoan" class="nav-item" active-class="active">
+        <div class="icon-wrapper">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+        </div>
+        <span class="nav-label">Tài khoản</span>
+      </router-link>
     </div>
   </header>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
-import logo from '../assets/logo 2008.jpg'
+import { computed } from 'vue'
 import { getUserField } from '../utils/auth'
 
-const router = useRouter()
-const isMenuOpen = ref(false)
-const headerRef = ref<HTMLElement | null>(null)
+const emit = defineEmits(['open-show-popup'])
 
-// ── Admin check ───────────────────────────────────────────
+// Check xem người dùng có vai trò là Admin hay không
 const isAdmin = computed(() => {
   const role = getUserField('vai_tro') || getUserField('role')
   if (role) return String(role).trim().toLowerCase() === 'admin'
@@ -90,150 +85,104 @@ const isAdmin = computed(() => {
   return false
 })
 
-// ── Tên hiển thị ──────────────────────────────────────────
-const displayName = computed(() => {
-  const name = getUserField('ten_ns') || getUserField('ten') || getUserField('name') || getUserField('tai_khoan')
-  if (name) return String(name).trim()
-  const raw = localStorage.getItem('user_info') || localStorage.getItem('user')
-  if (raw) {
-    try {
-      const p = JSON.parse(raw)
-      return String(p.ten_ns || p.ten || p.name || p.tai_khoan || 'Tài khoản').trim()
-    } catch {}
-  }
-  return 'Chưa đăng nhập'
-})
-
-// ── Trạng thái đăng nhập ──────────────────────────────────
-const isLoggedIn = computed(() => {
-  return displayName.value !== 'Chưa đăng nhập'
-})
-
-const toggleMenu = () => { isMenuOpen.value = !isMenuOpen.value }
-const closeMenu = () => { isMenuOpen.value = false }
-
-const handleLogout = () => {
-  closeMenu()
-  localStorage.removeItem('user')
-  localStorage.removeItem('user_info')
-  localStorage.removeItem('token')
-  sessionStorage.clear()
-  router.push('/login')
+// Mở trực tiếp Popup Thêm Show Mới
+const triggerOpenShow = () => {
+  emit('open-show-popup')
 }
-
-const handleClickOutside = (event: MouseEvent) => {
-  if (headerRef.value && !headerRef.value.contains(event.target as Node)) closeMenu()
-}
-
-onMounted(() => document.addEventListener('click', handleClickOutside))
-onUnmounted(() => document.removeEventListener('click', handleClickOutside))
 </script>
 
 <style scoped>
 .header {
-  position: relative; width: 100%; height: 68px; padding: 0 20px;
-  display: flex; align-items: center; justify-content: space-between;
-  background: #ba0000; box-sizing: border-box; z-index: 100;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  background-color: #ffffff;
+  border-top: 1px solid rgba(143, 0, 0, 0.15);
+  box-shadow: 0 -2px 10px rgba(143, 0, 0, 0.08);
+  /* Tăng thêm khoảng đệm đáy để Header cao và thoáng hơn */
+  padding: 10px 12px calc(18px + env(safe-area-inset-bottom)) 12px;
 }
 
-.header__left { display: flex; align-items: center; }
-.header__brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
-.header__logo { width: 42px; height: 42px; object-fit: cover; border-radius: 50%; border: 2px solid #ffd700; flex-shrink: 0; }
-
-.header__brand-info {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  line-height: 1.25;
-}
-
-.header__title { font-size: 14px; font-weight: 700; letter-spacing: 0.5px; color: #fff; }
-
-.header__user-sub {
+.header-container {
   display: flex;
   align-items: center;
-  gap: 5px;
-  margin-top: 2px;
+  justify-content: space-around;
+  max-width: 600px;
+  margin: 0 auto;
+  position: relative;
+  /* Tăng chiều cao vùng chứa từ 52px lên 60px */
+  height: 65px;
 }
 
-/* Base Dot */
-.status-dot {
-  width: 6px;
-  height: 6px;
+/* Nav Item - Icon chuẩn màu #8f0000 */
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  color: #8f0000;
+  font-size: 11.5px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  flex: 1;
+  opacity: 0.75;
+}
+
+.nav-icon {
+  width: 24px;
+  height: 24px;
+  margin-bottom: 3px;
+  stroke: #8f0000;
+}
+
+/* Trang active nổi bật với màu chủ đạo #8f0000 */
+.nav-item.active {
+  color: #8f0000;
+  font-weight: 700;
+  opacity: 1;
+}
+
+.nav-item.active .nav-icon {
+  stroke: #8f0000;
+  stroke-width: 2.5;
+}
+
+/* Floating Action Button (+) Nền đỏ chủ đạo gradient */
+.fab-wrapper {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex: 1;
+}
+
+.fab-btn {
+  width: 52px;
+  height: 52px;
   border-radius: 50%;
-  flex-shrink: 0;
-  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+  background: linear-gradient(135deg, #8f0000 0%, #5c0000 100%);
+  color: #ffffff;
+  border: none;
+  box-shadow: 0 4px 12px rgba(143, 0, 0, 0.4);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  /* Nâng nút cộng cao hơn một chút cho cân đối với header cao mới */
+  margin-top: -22px;
 }
 
-/* Chấm xanh khi đã đăng nhập */
-.status-dot--online {
-  background-color: #22c55e;
-  box-shadow: 0 0 4px rgba(34, 197, 94, 0.6);
+.fab-btn:active {
+  transform: scale(0.92);
 }
 
-/* Chấm đỏ khi chưa đăng nhập */
-.status-dot--offline {
-  background-color: #ef4444;
-  box-shadow: 0 0 4px rgba(239, 68, 68, 0.6);
+.fab-icon {
+  width: 28px;
+  height: 28px;
+  stroke: #ffffff;
 }
-
-.header__user-subname {
-  font-size: 11px;
-  font-weight: 400;
-  color: rgba(255, 255, 255, 0.7);
-  max-width: 150px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.header__menu-wrapper { position: relative; }
-
-.header__menu-btn {
-  width: 44px; height: 44px; border: none; background: transparent;
-  display: flex; flex-direction: column; justify-content: center;
-  gap: 4px; cursor: pointer; padding: 0;
-}
-.header__menu-btn span {
-  display: block; width: 20px; height: 2px; margin: 0 auto;
-  border-radius: 0; background: #ffd700; transition: all 0.25s ease;
-}
-.header__menu-btn--active span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
-.header__menu-btn--active span:nth-child(2) { opacity: 0; }
-.header__menu-btn--active span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
-
-.header__popup {
-  position: absolute; top: 100%; right: 0; margin-top: 8px;
-  width: 220px; background: #fff; border-radius: 0; padding: 0;
-  box-shadow: 0 8px 20px rgba(0,0,0,.25); border: 1px solid #ddd;
-  display: flex; flex-direction: column; overflow: hidden;
-}
-
-.header__popup-item--account {
-  display: flex; align-items: center; gap: 8px;
-  background: #fff8f0; color: #8f0000 !important;
-  font-weight: 700; font-size: 13px;
-}
-.header__popup-item--account:hover { background: #ba0000 !important; color: #ffd700 !important; }
-.account-icon { font-size: 16px; flex-shrink: 0; }
-
-.header__popup-divider { height: 1px; background: #e5e5e5; margin: 0; }
-
-.header__popup-item {
-  width: 100%; border: none; background: #fff; border-radius: 0;
-  padding: 11px 16px; font-size: 13px; font-weight: 600; color: #333;
-  text-align: left; cursor: pointer; text-decoration: none;
-  box-sizing: border-box; border-bottom: 1px solid #f2f2f2;
-  transition: background-color .2s, color .2s;
-  display: block;
-}
-.header__popup-item:last-child { border-bottom: none; }
-.header__popup-item:hover,
-.header__popup-item.router-link-exact-active { background: #ba0000; color: #fff; }
-
-.header__popup-item--logout { color: #d32f2f; border-top: 2px solid #f0f0f0; }
-.header__popup-item--logout:hover { background: #d32f2f; color: #fff; }
-
-.pop-enter-active, .pop-leave-active { transition: all .2s ease; }
-.pop-enter-from, .pop-leave-to { opacity: 0; transform: translateY(-6px); }
 </style>

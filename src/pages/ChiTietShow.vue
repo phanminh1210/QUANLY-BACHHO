@@ -8,9 +8,15 @@
       </div>
     </transition>
 
+    <!-- HEADER: NỀN TRẮNG TINH, CHỮ ĐỎ -->
     <section class="detail-page__header">
-      <div class="detail-page__inner">
-        <p class="detail-page__subtitle">Thông tin show và danh sách nhân sự tham gia</p>
+      <div class="detail-page__inner header-content">
+        <button class="back-btn" type="button" @click="goBack" aria-label="Quay lại">
+          <svg class="back-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+        </button>
+        <span class="header-title">Chi tiết show</span>
       </div>
     </section>
 
@@ -21,15 +27,14 @@
       <template v-else>
         <div class="detail-card">
           <div class="detail-info">
-            <div class="detail-info__row">
-              <span class="detail-info__label">Mã show:</span>
-              <span class="detail-info__value">{{ show.ma_show || '—' }}</span>
-            </div>
+            <!-- DÒNG 1: TÊN SHOW (ĐÃ BỎ MÃ SHOW) -->
             <div class="detail-info__row">
               <span class="detail-info__label">Tên show:</span>
               <input v-if="isEditing" v-model="editForm.ten_show" class="edit-input" type="text" placeholder="Tên show" />
               <span v-else class="detail-info__value">{{ show.ten_show || '—' }}</span>
             </div>
+
+            <!-- DÒNG 2: LOẠI SHOW -->
             <div class="detail-info__row">
               <span class="detail-info__label">Loại show:</span>
               <select v-if="isEditing" v-model="editForm.ma_loai_show" class="edit-input">
@@ -38,33 +43,43 @@
               </select>
               <span v-else class="detail-info__value">{{ show.ma_loai_show || '—' }}</span>
             </div>
-            <div class="detail-info__row">
-              <span class="detail-info__label">Ngày:</span>
-              <input v-if="isEditing" :value="formattedDateForInput" class="edit-input" type="date" @change="onDateChange" />
-              <span v-else class="detail-info__value">{{ show.ngay || '—' }}</span>
+
+            <!-- DÒNG 3: NGÀY & GIỜ (CÙNG 1 DÒNG) -->
+            <div class="detail-info__row detail-info__row--split">
+              <div class="detail-info__col">
+                <span class="detail-info__label">Ngày:</span>
+                <input v-if="isEditing" :value="formattedDateForInput" class="edit-input" type="date" @change="onDateChange" />
+                <span v-else class="detail-info__value">{{ show.ngay || '—' }}</span>
+              </div>
+              <div class="detail-info__col">
+                <span class="detail-info__label detail-info__label--short">Giờ:</span>
+                <input v-if="isEditing" v-model="editForm.gio" type="text" class="edit-input" placeholder="19:30" maxlength="5" @input="formatTimeInput" />
+                <span v-else class="detail-info__value">{{ show.gio || '—' }}</span>
+              </div>
             </div>
-            <div class="detail-info__row">
-              <span class="detail-info__label">Giờ:</span>
-              <input v-if="isEditing" v-model="editForm.gio" type="text" class="edit-input" placeholder="VD: 19:30" maxlength="5" @input="formatTimeInput" />
-              <span v-else class="detail-info__value">{{ show.gio || '—' }}</span>
-            </div>
+
+            <!-- DÒNG 4: ĐỊA ĐIỂM -->
             <div class="detail-info__row">
               <span class="detail-info__label">Địa điểm:</span>
               <input v-if="isEditing" v-model="editForm.diachi" class="edit-input" type="text" placeholder="Địa điểm" />
               <span v-else class="detail-info__value">{{ show.diachi || '—' }}</span>
             </div>
+
+            <!-- DÒNG 5: KHÁCH HÀNG -->
             <div class="detail-info__row">
               <span class="detail-info__label">Khách hàng:</span>
               <input v-if="isEditing" v-model="editForm.ten_khachhang" class="edit-input" type="text" placeholder="Khách hàng" />
               <span v-else class="detail-info__value">{{ show.ten_khachhang || '—' }}</span>
             </div>
+
+            <!-- DÒNG 6: SĐT -->
             <div class="detail-info__row">
               <span class="detail-info__label">SĐT:</span>
               <input v-if="isEditing" v-model="editForm.sdt" class="edit-input" type="tel" placeholder="Số điện thoại" />
               <span v-else class="detail-info__value">{{ show.sdt || '—' }}</span>
             </div>
 
-            <!-- Trạng thái + Nút bấm -->
+            <!-- DÒNG 7: TRẠNG THÁI + NÚT BẤM -->
             <div class="detail-info__row">
               <span class="detail-info__label">Trạng thái:</span>
               <span class="status-badge" :class="statusClass(pendingStatus || show.trang_thai)">
@@ -117,7 +132,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { API_ENDPOINTS } from '../config/api'
 import ShowStaffSection from '../pages/FormNhanSuTheoShow.vue'
 
@@ -136,6 +151,7 @@ const loaiShowList = ['Khai trương','Động thổ','Khánh thành','Lễ Hộ
 const allStatuses   = ['chưa diễn', 'đã diễn', 'đã hủy']
 
 const route          = useRoute()
+const router         = useRouter()
 const loading        = ref(false)
 const loadingStaff   = ref(false)
 const isSavingGlobal = ref(false)
@@ -158,6 +174,11 @@ const availableStatuses = computed(() => {
   const cur = ((pendingStatus.value || show.value?.trang_thai) || '').trim().toLowerCase()
   return allStatuses.filter(s => s !== cur)
 })
+
+// ── NAVIGATION ──
+const goBack = () => {
+  router.back()
+}
 
 // ── TOAST ──
 const toast = ref({ show: false, message: '', type: 'success' as 'success' | 'error' })
@@ -217,12 +238,10 @@ const selectStatus = async (newStatus: string) => {
 
   showStatusMenu.value = false
 
-  // Trường hợp: "chưa diễn" -> "đã diễn"
   if (curStatus === 'chưa diễn' && targetStatus === 'đã diễn') {
     pendingStatus.value = newStatus
     isDaDienPendingSave.value = true
   } else {
-    // Các trường hợp còn lại: Bật Màn hình chờ khóa thao tác -> Gọi API
     savingStatus.value = true
     try {
       const res = await apiFetch(API_ENDPOINTS.UPDATE_TRANG_THAI_SHOW(show.value.ma_show, newStatus))
@@ -428,11 +447,44 @@ onBeforeUnmount(() => { document.removeEventListener('click', handleClickOutside
 </script>
 
 <style scoped>
-.detail-page { position: relative; min-height: 100vh; background: #f6f1f1; }
-.detail-page__header   { background: linear-gradient(180deg, #8f0000 0%, #a50000 55%, #cf0000 100%); color: #fff; padding: 14px 16px; }
-.detail-page__inner    { max-width: 760px; margin: 0 auto; }
-.detail-page__subtitle { margin: 0; text-align: center; font-size: 13px; color: rgba(255,255,255,.95); }
-.detail-page__content  { max-width: 760px; margin: 0 auto; padding: 12px 12px 60px; }
+/* NỀN TOÀN BỘ TRANG TRẮNG TINH */
+.detail-page { 
+  position: relative; 
+  min-height: 100vh; 
+  background: #ffffff; 
+}
+
+/* HEADER: NỀN TRẮNG TINH, PHÂN TÁCH BẰNG SHADOW BÊN DƯỚI */
+.detail-page__header { 
+  background: #ffffff; 
+  padding: 12px 16px; 
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04); 
+}
+.detail-page__inner { max-width: 760px; margin: 0 auto; }
+.header-content { display: flex; align-items: center; gap: 10px; }
+
+.back-btn {
+  background: #ffffff;
+  border: none;
+  color: #8f0000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  cursor: pointer;
+  border-radius: 50%;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.back-btn:hover { 
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1); 
+}
+.back-icon { width: 20px; height: 20px; stroke: currentColor; }
+
+.header-title { font-size: 16px; font-weight: 700; color: #8f0000; }
+
+.detail-page__content { max-width: 760px; margin: 0 auto; padding: 16px 12px 60px; }
 
 /* LOADING OVERLAY KHÓA TOÀN BỘ MÀN HÌNH */
 .loading-overlay {
@@ -461,74 +513,157 @@ onBeforeUnmount(() => { document.removeEventListener('click', handleClickOutside
 .fade-enter-active, .fade-leave-active { transition: opacity 0.25s ease; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
 
-.state-msg        { text-align: center; padding: 30px; font-weight: 700; color: #8f0000; }
+.state-msg { text-align: center; padding: 30px; font-weight: 700; color: #8f0000; }
 .state-msg--error { color: #dc2626; }
 
-.detail-card { background: #fff; border-radius: 14px; padding: 14px; margin-bottom: 12px; border: 1px solid #ececec; box-shadow: 0 4px 10px rgba(143,0,0,.04); }
+/* CARD THÔNG TIN: NỀN TRẮNG TINH, ĐỔ BÓNG MỀM MẠI */
+.detail-card { 
+  background: #ffffff; 
+  border-radius: 16px; 
+  padding: 16px; 
+  margin-bottom: 16px; 
+  border: none;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); 
+}
 
-.detail-info        { display: flex; flex-direction: column; gap: 4px; }
-.detail-info__row   { display: flex; align-items: center; gap: 6px; min-height: 22px; flex-wrap: nowrap; }
-.detail-info__label { min-width: 80px; color: #8f0000; font-size: 13px; font-weight: 700; flex-shrink: 0; }
-.detail-info__value { color: #333; font-size: 13px; font-weight: 500; }
+.detail-info { display: flex; flex-direction: column; gap: 8px; }
+.detail-info__row { display: flex; align-items: center; gap: 8px; min-height: 28px; flex-wrap: nowrap; }
 
+/* CHIA 2 CỘT CHO DÒNG ĐÔI (NGÀY / GIỜ) */
+.detail-info__row--split {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.detail-info__col {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.detail-info__label { min-width: 85px; color: #8f0000; font-size: 13px; font-weight: 700; flex-shrink: 0; }
+.detail-info__label--short { min-width: auto; }
+.detail-info__value { color: #1e293b; font-size: 13px; font-weight: 500; }
+
+/* CÁC Ô INPUT KHI SỬA: NỀN TRẮNG, PHÂN BIỆT BẰNG SHADOW (KHÔNG VIỀN) */
 .edit-input {
   flex: 1; min-width: 0;
   font-size: 16px;
   transform: scale(0.8125);
   transform-origin: left center;
   width: calc(100% / 0.8125);
-  padding: 4px 8px;
-  border: 1px solid #d1d5db; border-radius: 7px;
-  outline: none; background: #f8fafc; color: #1e293b;
+  padding: 6px 10px;
+  border: none; 
+  border-radius: 8px;
+  outline: none; 
+  background: #ffffff; 
+  color: #1e293b;
   box-sizing: border-box;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+  transition: box-shadow 0.2s;
 }
-.edit-input:focus { border-color: #8f0000; background: #fff; }
+.edit-input:focus { 
+  box-shadow: 0 4px 12px rgba(143, 0, 0, 0.15); 
+}
 
-.status-badge          { display: inline-block; padding: 3px 11px; border-radius: 999px; font-size: 11px; font-weight: 700; flex-shrink: 0; white-space: nowrap; }
-.status-badge--done    { background: #dcfce7; color: #15803d; }
-.status-badge--pending { background: #fffbea; color: #a16207; }
-.status-badge--cancel  { background: #fee2e2; color: #b91c1c; }
+/* BADGES TRẠNG THÁI: GIỮ NỀN MÀU NHẸ CŨ KẾT HỢP SHADOW */
+.status-badge { 
+  display: inline-block; 
+  padding: 4px 12px; 
+  border-radius: 999px; 
+  font-size: 11px; 
+  font-weight: 700; 
+  flex-shrink: 0; 
+  white-space: nowrap; 
+}
+.status-badge--done { 
+  background: #f0fdf4; 
+  color: #15803d; 
+  box-shadow: 0 2px 6px rgba(22, 163, 74, 0.12); 
+}
+.status-badge--pending { 
+  background: #fefce8; 
+  color: #a16207; 
+  box-shadow: 0 2px 6px rgba(234, 179, 8, 0.15); 
+}
+.status-badge--cancel { 
+  background: #fef2f2; 
+  color: #b91c1c; 
+  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.12); 
+}
 
+/* MENU CHỌN TRẠNG THÁI: ĐỔ BÓNG NỔI SANG TRỌNG */
 .status-dropdown-wrapper { position: relative; flex-shrink: 0; margin-left: auto; }
 .status-menu {
   position: absolute; bottom: calc(100% + 6px); left: 0;
-  background: #fff; border: 1px solid #e2e8f0; border-radius: 10px;
-  box-shadow: 0 8px 24px rgba(0,0,0,.12); z-index: 200;
-  min-width: 130px; padding: 5px; display: flex; flex-direction: column; gap: 3px;
+  background: #ffffff; 
+  border: none; 
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); 
+  z-index: 200;
+  min-width: 135px; padding: 6px; display: flex; flex-direction: column; gap: 4px;
 }
 .status-menu__item {
-  display: flex; align-items: center; gap: 7px; width: 100%; border: none;
-  border-radius: 7px; padding: 8px 11px; font-size: 12px; font-weight: 700;
-  cursor: pointer; transition: all .12s; box-sizing: border-box;
+  display: flex; align-items: center; gap: 8px; width: 100%; border: none;
+  border-radius: 8px; padding: 8px 12px; font-size: 12px; font-weight: 700;
+  cursor: pointer; transition: all .15s; box-sizing: border-box;
+  background: #ffffff;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
 }
 .status-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-.status-menu__item--done    { background: #f0fdf4; color: #15803d; }
+.status-menu__item--done { color: #15803d; }
 .status-menu__item--done .status-dot { background: #16a34a; }
-.status-menu__item--done:hover { background: #16a34a; color: #fff; }
+.status-menu__item--done:hover { background: #16a34a; color: #fff; box-shadow: 0 3px 8px rgba(22, 163, 74, 0.3); }
 .status-menu__item--done:hover .status-dot { background: #fff; }
-.status-menu__item--pending { background: #fefce8; color: #a16207; }
+
+.status-menu__item--pending { color: #a16207; }
 .status-menu__item--pending .status-dot { background: #eab308; }
-.status-menu__item--pending:hover { background: #eab308; color: #fff; }
+.status-menu__item--pending:hover { background: #eab308; color: #fff; box-shadow: 0 3px 8px rgba(234, 179, 8, 0.3); }
 .status-menu__item--pending:hover .status-dot { background: #fff; }
-.status-menu__item--cancel  { background: #fef2f2; color: #b91c1c; }
+
+.status-menu__item--cancel { color: #b91c1c; }
 .status-menu__item--cancel .status-dot { background: #ef4444; }
-.status-menu__item--cancel:hover { background: #ef4444; color: #fff; }
+.status-menu__item--cancel:hover { background: #ef4444; color: #fff; box-shadow: 0 3px 8px rgba(239, 68, 68, 0.3); }
 .status-menu__item--cancel:hover .status-dot { background: #fff; }
 
+/* NÚT THAO TÁC */
 .footer-btn {
   border: none; border-radius: 999px;
-  padding: 4px 10px; font-size: 11px; font-weight: 700;
+  padding: 5px 12px; font-size: 11px; font-weight: 700;
   cursor: pointer; transition: all .15s; white-space: nowrap; flex-shrink: 0;
 }
-.footer-btn--outline { background: #fff; color: #334155; border: 1.5px solid #cbd5e1; }
-.footer-btn--outline:hover { background: #f1f5f9; }
-.footer-btn--primary { background: #8f0000; color: #fff; border: 1.5px solid #8f0000; }
-.footer-btn--primary:hover { background: #b91c1c; }
-.footer-btn:disabled { opacity: .6; cursor: not-allowed; }
+.footer-btn--outline { 
+  background: #475569; 
+  color: #ffffff; 
+  box-shadow: 0 2px 8px rgba(71, 85, 105, 0.25); 
+}
+.footer-btn--outline:hover { 
+  background: #334155; 
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(51, 65, 85, 0.35); 
+}
+.footer-btn--primary { 
+  background: #8f0000; 
+  color: #ffffff; 
+  box-shadow: 0 3px 10px rgba(143, 0, 0, 0.25); 
+}
+.footer-btn--primary:hover { 
+  background: #b91c1c; 
+  box-shadow: 0 4px 14px rgba(185, 28, 28, 0.35); 
+}
+.footer-btn:disabled { opacity: .6; cursor: not-allowed; box-shadow: none; }
 
-.toast-pill { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); padding: 8px 18px; border-radius: 999px; font-size: 13px; font-weight: 700; color: #fff; box-shadow: 0 4px 14px rgba(0,0,0,.18); z-index: 10000; display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+/* TOAST THÔNG BÁO */
+.toast-pill { 
+  position: fixed; top: 16px; left: 50%; transform: translateX(-50%); 
+  padding: 8px 18px; border-radius: 999px; font-size: 13px; font-weight: 700; 
+  color: #fff; box-shadow: 0 6px 20px rgba(0,0,0,0.15); 
+  z-index: 10000; display: flex; align-items: center; gap: 6px; white-space: nowrap; 
+}
 .toast-pill--success { background: #15803d; }
-.toast-pill--error   { background: #dc2626; }
+.toast-pill--error { background: #dc2626; }
 .toast-enter-active, .toast-leave-active { transition: opacity .3s, transform .3s; }
 .toast-enter-from, .toast-leave-to { opacity: 0; transform: translateX(-50%) translateY(-8px); }
 </style>

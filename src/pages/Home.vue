@@ -1,13 +1,30 @@
 <template>
   <div class="home-page">
-    <!-- HEADER -->
-    <section class="home-top">
-      <div class="home-top__inner">
-        <p class="home-subtitle">Hệ thống quản lý lịch diễn & nhân sự</p>
-      </div>
-    </section>
+    <!-- HEADER THƯƠNG HIỆU & TÀI KHOẢN -->
+    <header class="home-header">
+      <p class="home-subtitle">Hệ thống quản lý lịch diễn & nhân sự Bạch Hổ Đường</p>
 
-    <!-- BODY -->
+      <div class="home-header__brand">
+        <img :src="logo" alt="Logo" class="home-header__logo" />
+        <div class="home-header__info">
+          <div class="home-header__user-sub">
+            <span
+              class="status-dot"
+              :class="isLoggedIn ? 'status-dot--online' : 'status-dot--offline'"
+            ></span>
+            <span 
+              class="home-header__username" 
+              :class="{ 'home-header__username--clickable': !isLoggedIn }"
+              @click="handleUserClick"
+            >
+              {{ displayName }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- BODY (Tự động cuộn khi tràn nội dung, vừa khít thì đứng yên) -->
     <section class="home-bottom">
       <!-- 1. LỊCH DIỄN SẮP TỚI (SHOW GẦN NHẤT) -->
       <div class="section-title">📅 Lịch diễn sắp tới</div>
@@ -52,23 +69,17 @@
                 <template v-else>{{ item.phone || 'Chưa có' }}</template>
               </span>
             </div>
+            <!-- Thay thế bằng 2 Component Button Fancy -->
             <div class="schedule-card__actions">
-              <button 
-                class="btn btn--green" 
-                type="button" 
+              <ButtonDangKyShow_4 
+                :show-id="item.id" 
+                text="Đăng ký diễn" 
                 :disabled="loadingShows || !item.id" 
-                @click="item.id && goToRegister(item)"
-              >
-                Đăng ký diễn
-              </button>
-              <button 
-                class="btn btn--red" 
-                type="button" 
-                :disabled="loadingShows || !item.id" 
-                @click="item.id && goToDetail(item.id)"
-              >
-                Chi tiết
-              </button>
+              />
+              <ButtonChiTiet_4 
+                :show-id="item.id" 
+                text="Chi tiết" 
+              />
             </div>
           </div>
         </article>
@@ -106,10 +117,21 @@
           <img :src="iconKhachHang" alt="Icon" class="menu-icon" />
           <span>Khách hàng</span>
         </router-link>
+
+        <router-link class="home-menu__item" to="/tien-ung">
+          <img :src="iconTienUng" alt="Icon" class="menu-icon" />
+          <span>Lịch sử ứng tiền</span>
+        </router-link>
+
+        <!-- Nút mới: Ứng tiền cho NS (Chỉ dành cho Admin) -->
+        <router-link v-if="isAdmin" class="home-menu__item" to="/add-ung-tien-cho-ns">
+          <img :src="iconUngTienChoNS" alt="Icon" class="menu-icon" />
+          <span>Ứng tiền cho NS</span>
+        </router-link>
       </div>
 
       <!-- 3. BIỂU ĐỒ & THỐNG KÊ -->
-      <div class="chart-card margin-top-lg">
+      <div class="chart-card margin-top-xxl">
         <div class="chart-header">
           <span class="chart-title">📊 Biểu đồ tăng trưởng show năm {{ currentYear }}</span>
         </div>
@@ -168,17 +190,24 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { API_ENDPOINTS } from '../config/api'
 import { getUserField } from '../utils/auth'
 
+// Import các Component nút Fancy
+import ButtonChiTiet_4 from '../components/common/ButtonChiTiet.vue'
+import ButtonDangKyShow_4 from '../components/common/ButtonDangKyShow.vue'
+
+import logo from '../assets/logo 2008.jpg'
 import iconDaDien from '../assets/icondadien.jpg'
 import iconchuadien from '../assets/iconchuadien.jpg'
 import iconChamCong from '../assets/chamcong.jpg'
 import iconTatCaShow from '../assets/tatcashow.jpg'
 import iconNhanSu from '../assets/nhansu.jpg'
 import iconKhachHang from '../assets/khachhang.jpg'
+import iconTienUng from '../assets/tienung.png'
+import iconUngTienChoNS from '../assets/ungtienchons.png'
 
 type ShowItem = {
   id: string | number
@@ -202,6 +231,7 @@ const totalYear = ref(0)
 const totalMonth = ref(0)
 const monthlyData = ref<number[]>(Array(12).fill(0))
 
+// ── USER & AUTH ──
 const isAdmin = computed(() => {
   const role = getUserField('vai_tro') || getUserField('role')
   if (role) return String(role).trim().toLowerCase() === 'admin'
@@ -214,6 +244,51 @@ const isAdmin = computed(() => {
   }
   return false
 })
+
+const displayName = computed(() => {
+  const name = getUserField('ten_ns') || getUserField('ten') || getUserField('name') || getUserField('tai_khoan')
+  if (name) return String(name).trim()
+  const raw = localStorage.getItem('user_info') || localStorage.getItem('user')
+  if (raw) {
+    try {
+      const p = JSON.parse(raw)
+      return String(p.ten_ns || p.ten || p.name || p.tai_khoan || 'Đăng nhập').trim()
+    } catch {}
+  }
+  return 'Đăng nhập'
+})
+
+const isLoggedIn = computed(() => {
+  return displayName.value !== 'Đăng nhập' && displayName.value !== 'Chưa đăng nhập'
+})
+
+// Chuyển hướng sang trang /login khi bấm vào chữ "Đăng nhập"
+const handleUserClick = () => {
+  if (!isLoggedIn.value) {
+    router.push('/login')
+  }
+}
+
+// ── LOGIC CHẶN ZOOM MÀN HÌNH ──
+let lastTouchEnd = 0
+
+const handleTouchStart = (e: TouchEvent) => {
+  if (e.touches.length > 1) {
+    e.preventDefault()
+  }
+}
+
+const handleTouchEnd = (e: TouchEvent) => {
+  const now = Date.now()
+  if (now - lastTouchEnd <= 300) {
+    e.preventDefault()
+  }
+  lastTouchEnd = now
+}
+
+const handleGestureStart = (e: Event) => {
+  e.preventDefault()
+}
 
 const parseDateTime = (dateStr: string, timeStr = ''): Date | null => {
   if (!dateStr) return null
@@ -313,33 +388,154 @@ const getBarHeight = (val: number): string => {
 onMounted(() => {
   fetchUpcoming()
   fetchStats()
+
+  document.addEventListener('touchstart', handleTouchStart, { passive: false })
+  document.addEventListener('touchend', handleTouchEnd, { passive: false })
+  document.addEventListener('gesturestart', handleGestureStart, { passive: false })
 })
 
-const goToDetail = (id: string | number) =>
-  router.push({ name: 'ChiTietShow', params: { id: id || 'default' } })
-const goToRegister = (item: ShowItem) =>
-  router.push({ name: 'DangKyShow', params: { id: item.id || 'default' }, query: { showName: item.name } })
+onUnmounted(() => {
+  document.removeEventListener('touchstart', handleTouchStart)
+  document.removeEventListener('touchend', handleTouchEnd)
+  document.removeEventListener('gesturestart', handleGestureStart)
+})
 </script>
 
 <style scoped>
-.home-page { min-height: 100vh; display: flex; flex-direction: column; background: #f6f1f1; }
+/* Import CSS Loading từ src/styles/loading.css */
+@import '../styles/loading.css';
+
+/* KHUNG CHÍNH CỐ ĐỊNH KÍCH THƯỚC MÀN HÌNH, KHÔNG BỊ TRÀN TỰ DO */
+.home-page {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  overflow: hidden;
+  overscroll-behavior: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
 
 /* ── HEADER ── */
-.home-top { background: linear-gradient(180deg, #8f0000 0%, #a50000 55%, #cf0000 100%); color: #fff; padding: 18px 16px; text-align: center; }
-.home-top__inner { max-width: 760px; margin: 0 auto; }
-.home-title { margin: 0; font-size: 18px; font-weight: 800; letter-spacing: 0.5px; }
-.home-subtitle { margin: 4px 0 0; font-size: 12px; font-weight: 500; color: rgba(255,255,255,.9); }
+.home-header {
+  background: transparent;
+  padding: 12px 16px 8px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  max-width: 760px;
+  margin: 0 auto;
+  width: 100%;
+  flex-shrink: 0;
+}
 
-/* ── BOTTOM ── */
-.home-bottom { flex: 1; padding: 14px 14px 60px; }
+.home-subtitle {
+  margin: 0;
+  padding-left: 16px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #8f0000;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  text-align: center;
+  width: 100%;
+}
+
+.home-header__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 16px 6px 12px;
+  border-radius: 0 999px 999px 0;
+  background: linear-gradient(135deg, #fef08a 0%, #eab308 50%, #ca8a04 100%);
+  border: 1px solid #fde047;
+  border-left: none;
+  box-shadow: 2px 3px 10px rgba(202, 138, 4, 0.25);
+  max-width: max-content;
+}
+
+.home-header__logo {
+  width: 42px;
+  height: 42px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.home-header__info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.home-header__user-sub {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.status-dot--online {
+  background-color: #16a34a;
+  box-shadow: 0 0 4px rgba(22, 163, 74, 0.6);
+}
+
+.status-dot--offline {
+  background-color: #dc2626;
+  box-shadow: 0 0 4px rgba(220, 38, 38, 0.6);
+}
+
+.home-header__username {
+  font-size: 15px;
+  font-weight: 800;
+  color: #710000;
+  max-width: 200px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.5);
+}
+
+.home-header__username--clickable {
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+/* ── PHẦN THÂN ── */
+.home-bottom {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 14px 14px 60px;
+  overscroll-behavior-y: contain;
+}
+
 .section-title { max-width: 760px; margin: 0 auto 8px; font-size: 13px; font-weight: 800; color: #8f0000; }
-.margin-top-lg { margin-top: 30px; }
+.margin-top-lg { margin-top: 26px; }
 
 /* ── CARD SHOW ── */
 .upcoming-list { max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 8px; }
 .schedule-card {
-  background: #fff; border-radius: 14px; padding: 10px 12px;
-  border: 1px solid #ececec; box-shadow: 0 4px 10px rgba(143,0,0,.04);
+  background: #ffffff; 
+  border-radius: 14px; padding: 10px 12px;
+  border: 1px solid rgba(143, 0, 0, 0.12);
+  box-shadow: 0 4px 14px rgba(143, 0, 0, 0.08);
   border-left: 5px solid #9ca3af;
 }
 .schedule-card--not-played { border-left-color: #facc15; }
@@ -352,19 +548,14 @@ const goToRegister = (item: ShowItem) =>
 .schedule-card__key { font-size: 13px; font-weight: 700; color: #8f0000; }
 .schedule-card__key--inline { margin-left: 10px; }
 .schedule-card__value { font-size: 13px; font-weight: 500; color: #444; display: inline-flex; align-items: center; }
-.schedule-card__actions { margin-top: 6px; display: flex; justify-content: flex-end; gap: 6px; flex-wrap: wrap; }
+.schedule-card__actions { margin-top: 6px; display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap; align-items: center; }
 
-.btn { border: none; border-radius: 999px; padding: 6px 13px; color: #fff; font-size: 12px; font-weight: 700; cursor: pointer; transition: opacity .15s; }
-.btn--green { background: #16a34a; } .btn--green:hover { background: #15803d; }
-.btn--red   { background: #8f0000; } .btn--red:hover   { background: #a50000; }
-.btn:disabled { opacity: 0.6; cursor: not-allowed; }
-
-/* ── MENU ICON (NGANG, 5 CỘT, KHÔNG NỀN, CĂN TRÁI) ── */
+/* ── MENU ICON ── */
 .home-menu {
   max-width: 760px;
   margin: 0 auto;
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   justify-content: start;
   gap: 12px 8px;
   padding: 4px 0;
@@ -402,9 +593,13 @@ const goToRegister = (item: ShowItem) =>
 
 /* ── BIỂU ĐỒ ── */
 .chart-card {
-  max-width: 760px; margin: 0 auto 12px; background: #fff;
-  border-radius: 14px; padding: 12px 12px 8px; border: 1px solid #ececec;
-  box-shadow: 0 4px 10px rgba(143,0,0,.04);
+  max-width: 760px; 
+  margin: 55px auto 12px auto;
+  background: #ffffff;
+  border-radius: 14px; 
+  padding: 12px 12px 8px; 
+  border: 1px solid rgba(143, 0, 0, 0.12);
+  box-shadow: 0 4px 14px rgba(143, 0, 0, 0.08);
 }
 .chart-header { margin-bottom: 10px; }
 .chart-title { font-size: 12px; font-weight: 800; color: #8f0000; }
@@ -439,7 +634,7 @@ const goToRegister = (item: ShowItem) =>
 .chart-bar {
   width: 70%;
   max-width: 18px;
-  background: #e0d5d5;
+  background: #f0e6e6;
   border-radius: 4px 4px 0 0;
   transition: height 0.4s ease;
   min-height: 8px;
@@ -449,7 +644,7 @@ const goToRegister = (item: ShowItem) =>
 }
 .chart-bar--current {
   background: linear-gradient(180deg, #ff2525 0%, #8f0000 100%);
-  box-shadow: 0 -2px 8px rgba(143,0,0,.4);
+  box-shadow: 0 -2px 8px rgba(143,0,0,.3);
 }
 .chart-label { font-size: 10px; font-weight: 600; color: #6b7280; margin-top: 5px; white-space: nowrap; }
 .chart-label--current { color: #8f0000; font-weight: 800; }
@@ -459,64 +654,35 @@ const goToRegister = (item: ShowItem) =>
 .stats-card {
   position: relative; overflow: hidden;
   border-radius: 14px; padding: 10px 12px 9px;
-  color: #fff; box-shadow: 0 8px 16px rgba(143,0,0,.10); min-height: 84px;
+  color: #fff; box-shadow: 0 4px 12px rgba(0,0,0,.08); min-height: 84px;
 }
 .stats-card::before {
   content: ''; position: absolute; top: -18px; right: -16px;
   width: 64px; height: 64px; border-radius: 50%; background: rgba(255,255,255,.12);
 }
-.stats-card--red  { background: linear-gradient(135deg, #6f0000 0%, #8f0000 100%); }
-.stats-card--gold { background: linear-gradient(135deg, #8f0000 0%, #a50000 100%); }
+
+.stats-card--red { 
+  background: linear-gradient(135deg, #8f0000 0%, #6f0000 100%); 
+}
+
+.stats-card--gold { 
+  background: linear-gradient(135deg, #ad0404 0%, #6f0000 100%); 
+}
+
 .stats-title-row { position: relative; z-index: 1; display: flex; align-items: center; gap: 6px; }
-.stats-title-icon { width: 22px; height: 22px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; background: rgba(255,255,255,.16); flex-shrink: 0; }
-.stats-label { font-size: 11px; font-weight: 800; color: rgba(255,215,0,.95); line-height: 1.2; }
+.stats-title-icon { width: 22px; height: 22px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; background: rgba(255,255,255,.2); flex-shrink: 0; }
+
+.stats-label { font-size: 11px; font-weight: 800; color: #ffffff; line-height: 1.2; }
+
 .stats-value { position: relative; z-index: 1; display: flex; align-items: baseline; gap: 4px; margin-top: 8px; font-size: 22px; font-weight: 800; color: #fff; text-shadow: 0 2px 8px rgba(0,0,0,.15); }
 .stats-unit { font-size: 13px; font-weight: 600; }
-.stats-note { position: relative; z-index: 1; margin-top: 4px; display: block; font-size: 10px; color: rgba(255,255,255,.85); line-height: 1.35; }
-
-/* ── SKELETON LOADING EFFECTS (HÌNH MỜ LƯỚT NGANG) ── */
-@keyframes skeleton-shimmer {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
-}
-
-.skeleton-text {
-  display: inline-block;
-  height: 1em;
-  background-color: #e2e8f0;
-  border-radius: 4px;
-  position: relative;
-  overflow: hidden;
-  vertical-align: middle;
-}
-
-.skeleton-text::after, .skeleton-bar::after {
-  position: absolute;
-  top: 0; right: 0; bottom: 0; left: 0;
-  transform: translateX(-100%);
-  background: linear-gradient(
-    90deg,
-    rgba(255, 255, 255, 0) 0,
-    rgba(255, 255, 255, 0.5) 50%,
-    rgba(255, 255, 255, 0) 100%
-  );
-  animation: skeleton-shimmer 1.5s infinite;
-  content: '';
-}
-
-.skeleton-text--title { width: 60%; height: 18px; }
-.skeleton-text--medium { width: 140px; height: 14px; }
-.skeleton-text--short { width: 60px; height: 14px; }
-.skeleton-text--number { width: 45px; height: 22px; background-color: rgba(255, 255, 255, 0.25); }
-
-.skeleton-bar {
-  background-color: #e2e8f0;
-  position: relative;
-  overflow: hidden;
-}
+.stats-note { position: relative; z-index: 1; margin-top: 4px; display: block; font-size: 10px; color: rgba(255,255,255,.9); line-height: 1.35; }
 
 /* ── RESPONSIVE ── */
 @media (max-width: 640px) {
+  .home-header__logo { width: 38px; height: 38px; }
+  .home-header__username { font-size: 14px; max-width: 160px; }
+  .home-subtitle { font-size: 9px; padding-left: 12px; }
   .menu-icon { width: 38px; height: 38px; }
   .home-menu__item span { font-size: 10px; }
   .stats-card { min-height: 80px; padding: 9px 10px 8px; }
@@ -525,12 +691,8 @@ const goToRegister = (item: ShowItem) =>
   .schedule-card { padding: 10px; }
   .schedule-card__name { font-size: 15px; }
   .schedule-card__key, .schedule-card__value { font-size: 12px; }
-  .btn { font-size: 11px; padding: 5px 10px; }
   .chart-bar { max-width: 12px; }
   .chart-value { font-size: 8px; }
   .chart-label { font-size: 9px; }
-  .margin-top-lg {
-    margin-top: 28px;
-  }
 }
 </style>

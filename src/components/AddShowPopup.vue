@@ -243,7 +243,7 @@ const showToast = (message: string, type: 'success' | 'error') => {
 
 const formatTimeInput = (e: Event) => {
   const input = e.target as HTMLInputElement
-  const cursor = input.selectionStart ?? 0
+ // const cursor = input.selectionStart ?? 
 
   // Chỉ giữ số và dấu :
   let val = input.value.replace(/[^\d:]/g, '')

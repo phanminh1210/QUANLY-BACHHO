@@ -1,30 +1,55 @@
 <template>
   <div class="schedule-page">
-    <section class="schedule-page__header">
-      <div class="schedule-page__inner">
-        <p class="schedule-page__subtitle">Danh sách các show sắp tới</p>
+    <!-- MÀN HÌNH CHỜ LÀM MỜ KHÓA TOÀN BỘ THAO TÁC KHI XỬ LÝ API -->
+    <transition name="fade">
+      <div v-if="submitting" class="loading-overlay">
+        <div class="loading-spinner"></div>
+        <p class="loading-text">Đang xử lý, vui lòng chờ...</p>
       </div>
-    </section>
+    </transition>
+
+    <!-- HEADER DÙNG COMPONENT CHUNG -->
+    <HeaderTitle title="Danh sách các show sắp tới" />
 
     <section class="schedule-page__content">
-      <!-- THANH TÌM KIẾM ĐƠN NGUYÊN BẢN (TÌM THEO TẤT CẢ TRƯỜNG) -->
-      <div class="search-box">
-        <div class="search-field">
-          <span class="search-icon">🔍</span>
-          <input
-            v-model="searchKeyword"
-            type="text"
-            class="search-input"
-            placeholder="Tìm kiếm theo tên, ngày, khách hàng, địa điểm, SĐT..."
+      <!-- THANH CÔNG CỤ TÌM KIẾM (CỐ ĐỊNH KHI LƯỚT XUỐNG - CĂN PHẢI) -->
+      <div class="filter-bar-text">
+        <div class="filter-row-right">
+          <!-- 1. Ô Sắp Xếp Ngày Diễn -->
+          <button class="sort-toggle-btn" type="button" @click="toggleSortOrder">
+            <svg class="sort-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 5v14M12 19l-4-4M12 19l4-4" />
+              <template v-if="searchForm.sortOrder === 'asc'">
+                <line x1="16" y1="6" x2="18" y2="6" />
+                <line x1="16" y1="9.5" x2="19" y2="9.5" />
+                <line x1="16" y1="13" x2="20" y2="13" />
+                <line x1="16" y1="16.5" x2="21" y2="16.5" />
+              </template>
+              <template v-else>
+                <line x1="16" y1="6" x2="21" y2="6" />
+                <line x1="16" y1="9.5" x2="20" y2="9.5" />
+                <line x1="16" y1="13" x2="19" y2="13" />
+                <line x1="16" y1="16.5" x2="18" y2="16.5" />
+              </template>
+            </svg>
+            <span class="sort-label">{{ searchForm.sortOrder === 'asc' ? 'Gần nhất' : 'Xa nhất' }}</span>
+          </button>
+
+          <!-- 2. Ô Tìm Kiếm (Dùng Component ThanhTimKiem.vue) -->
+          <ThanhTimKiem
+            v-model:keyword="searchForm.keyword"
+            placeholder="Tìm tên, ngày, khách, địa điểm, SĐT..."
           />
-          <button v-if="searchKeyword" class="clear-btn" @click="searchKeyword = ''">✕</button>
         </div>
       </div>
 
-      <!-- LOADING SPINNER -->
-      <div v-if="loading" class="loading-state">
-        <div class="spinner"></div>
-        <p class="loading-text">Đang tải dữ liệu...</p>
+      <!-- SKELETON LOADING -->
+      <div v-if="loading && allSchedules.length === 0" class="schedule-list">
+        <div v-for="n in 4" :key="n" class="schedule-card skeleton-card">
+          <div class="skeleton-line skeleton-title"></div>
+          <div class="skeleton-line skeleton-text"></div>
+          <div class="skeleton-line skeleton-text short"></div>
+        </div>
       </div>
 
       <div v-else-if="errorMessage && allSchedules.length === 0" class="state-message state-message--error">
@@ -55,16 +80,12 @@
               <div class="schedule-card__line">
                 <span class="schedule-card__key">Loại show:</span>
                 <span class="schedule-card__value">{{ item.type }}</span>
-              </div>
-              <div class="schedule-card__line">
-                <span class="schedule-card__key">Khách hàng:</span>
+                <span class="schedule-card__key schedule-card__key--inline">Khách:</span>
                 <span class="schedule-card__value">{{ item.rawKhachHang || 'Chưa cập nhật' }}</span>
               </div>
               <div class="schedule-card__line">
-                <span class="schedule-card__key">Ngày:</span>
-                <span class="schedule-card__value">{{ item.date }}</span>
-                <span class="schedule-card__key schedule-card__key--inline">Giờ:</span>
-                <span class="schedule-card__value">{{ item.time }}</span>
+                <span class="schedule-card__key">Thời gian:</span>
+                <span class="schedule-card__value">{{ item.date }} ({{ item.time }})</span>
               </div>
               <div class="schedule-card__line">
                 <span class="schedule-card__key">Địa điểm:</span>
@@ -76,8 +97,8 @@
               </div>
 
               <div class="schedule-card__actions">
-                <button class="btn btn--green" type="button" @click="goToRegister(item)">Đăng ký show</button>
-                <button class="btn btn--red" type="button" @click="goToDetail(item.id)">Chi tiết</button>
+                <ButtonDangKyShow @click="goToRegister(item)" />
+                <ButtonChiTiet @click="goToDetail(item.id)" />
               </div>
             </div>
           </article>
@@ -96,10 +117,19 @@
                 <label class="edit-label">Tên show</label>
                 <input class="edit-input" v-model="editForm.ten_show" type="text" placeholder="Tên show" />
               </div>
+
+              <div class="edit-field">
+                <label class="edit-label">Loại show</label>
+                <select v-model="editForm.ma_loai_show" class="edit-input">
+                  <option value="">-- Chọn loại show --</option>
+                  <option v-for="t in loaiShowList" :key="t" :value="t">{{ t }}</option>
+                </select>
+              </div>
+
               <div class="edit-row">
                 <div class="edit-field">
                   <label class="edit-label">Ngày diễn</label>
-                  <input class="edit-input" v-model="editForm.ngay" type="text" placeholder="VD: 20/08/2026" />
+                  <input class="edit-input" :value="formattedDateForModal" type="date" @change="onModalDateChange" />
                 </div>
                 <div class="edit-field">
                   <label class="edit-label">Giờ diễn</label>
@@ -110,30 +140,28 @@
                     type="text"
                     placeholder="VD: 09:00"
                     maxlength="5"
-                    @input="validateGio"
+                    @input="formatTimeInput"
                   />
                   <span v-if="gioError" class="edit-error">Phải đúng dạng HH:MM</span>
                 </div>
               </div>
+              
               <div class="edit-field">
                 <label class="edit-label">Địa điểm</label>
                 <input class="edit-input" v-model="editForm.diachi" type="text" placeholder="Địa điểm" />
               </div>
+
               <div class="edit-field">
                 <label class="edit-label">Khách hàng</label>
                 <input class="edit-input" v-model="editForm.ten_khachhang" type="text" placeholder="Tên khách hàng" />
               </div>
-              <div class="edit-row">
-                <div class="edit-field">
-                  <label class="edit-label">SĐT</label>
-                  <input class="edit-input" v-model="editForm.sdt" type="text" placeholder="SĐT" />
-                </div>
-                <div class="edit-field">
-                  <label class="edit-label">Loại show</label>
-                  <input class="edit-input" v-model="editForm.ma_loai_show" type="text" placeholder="Loại show" />
-                </div>
+
+              <div class="edit-field">
+                <label class="edit-label">SĐT</label>
+                <input class="edit-input" v-model="editForm.sdt" type="tel" placeholder="SĐT" />
               </div>
             </div>
+
             <div class="edit-actions">
               <button class="btn btn--green" :disabled="submitting || gioError" type="button" @click="submitEditForm">
                 {{ submitting ? 'Đang lưu...' : 'Lưu' }}
@@ -164,7 +192,7 @@
 
     <!-- TOAST -->
     <Teleport to="body">
-      <Transition name="slide-down">
+      <Transition name="toast">
         <div v-if="toast.show" class="toast-pill" :class="`toast-pill--${toast.type}`">
           <span>{{ toast.type === 'success' ? '✓' : '✕' }}</span> {{ toast.message }}
         </div>
@@ -178,6 +206,11 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { API_ENDPOINTS } from '../config/api'
 
+import HeaderTitle from '../components/common/HeaderQuayLai.vue'
+import ButtonChiTiet from '../components/common/ButtonChiTiet.vue'
+import ButtonDangKyShow from '../components/common/ButtonDangKyShow.vue'
+import ThanhTimKiem from '../components/common/ThanhTimKiem.vue'
+
 type Schedule = {
   id: string | number
   name: string; type: string; date: string; time: string
@@ -186,48 +219,63 @@ type Schedule = {
   rawType: string; rawKhachHang: string
 }
 
+const loaiShowList = ['Khai trương','Động thổ','Khánh thành','Lễ Hội','Trung thu','Đám cưới','Mừng thọ','Xông đất','Sinh nhật','Khác']
+
 const router       = useRouter()
 const loading      = ref(false)
 const submitting   = ref(false)
 const errorMessage = ref('')
 const allSchedules = ref<Schedule[]>([])
 
-// ── Search State (Dùng 1 ô duy nhất) ──────────────────────
-const searchKeyword = ref('')
+// ── Search & Filter State ────────────────────────────────
+const searchForm = ref({
+  keyword: '',
+  sortOrder: 'asc'
+})
+
+const toggleSortOrder = () => {
+  searchForm.value.sortOrder = searchForm.value.sortOrder === 'asc' ? 'desc' : 'asc'
+}
 
 const parseDateToTimestamp = (dateStr: string): number => {
-  if (!dateStr || dateStr === 'Chưa cập nhật') return 0
+  if (!dateStr || dateStr === 'Chưa cập nhật' || !dateStr.includes('/')) return 0
   const parts = dateStr.split('/')
   if (parts.length === 3) {
-    const [day, month, year] = parts.map(p => parseInt(p, 10))
-    return new Date(year, month - 1, day).getTime()
+    const day = parseInt(parts[0], 10)
+    const month = parseInt(parts[1], 10) - 1
+    const year = parseInt(parts[2], 10)
+    return new Date(year, month, day).getTime()
   }
   return 0
 }
 
-// Lọc dữ liệu khớp với BẤT KỲ trường nào trong show
 const filteredSchedules = computed(() => {
-  const kw = searchKeyword.value.trim().toLowerCase()
-  if (!kw) {
-    return [...allSchedules.value].sort((a, b) => parseDateToTimestamp(b.date) - parseDateToTimestamp(a.date))
-  }
+  const result = allSchedules.value.filter(item => {
+    if (searchForm.value.keyword.trim()) {
+      const kw = searchForm.value.keyword.trim().toLowerCase()
+      const matchName     = item.name.toLowerCase().includes(kw)
+      const matchCustomer = item.rawKhachHang.toLowerCase().includes(kw)
+      const matchDate     = item.date.toLowerCase().includes(kw)
+      const matchTime     = item.time.toLowerCase().includes(kw)
+      const matchLocation = item.location.toLowerCase().includes(kw)
+      const matchPhone    = item.phone.toLowerCase().includes(kw)
+      const matchType     = item.type.toLowerCase().includes(kw)
 
-  return allSchedules.value
-    .filter(item => {
-      return (
-        item.name.toLowerCase().includes(kw) ||
-        item.type.toLowerCase().includes(kw) ||
-        item.rawKhachHang.toLowerCase().includes(kw) ||
-        item.date.toLowerCase().includes(kw) ||
-        item.time.toLowerCase().includes(kw) ||
-        item.location.toLowerCase().includes(kw) ||
-        item.phone.toLowerCase().includes(kw) ||
-        item.status.toLowerCase().includes(kw)
-      )
-    })
-    .sort((a, b) => parseDateToTimestamp(b.date) - parseDateToTimestamp(a.date))
+      if (!matchName && !matchCustomer && !matchDate && !matchTime && !matchLocation && !matchPhone && !matchType) {
+        return false
+      }
+    }
+    return true
+  })
+
+  return result.sort((a, b) => {
+    const timeA = parseDateToTimestamp(a.date)
+    const timeB = parseDateToTimestamp(b.date)
+    return searchForm.value.sortOrder === 'asc' ? timeA - timeB : timeB - timeA
+  })
 })
 
+// ── safeJson & Helper ────────────────────────────────────
 const safeJson = async (res: Response): Promise<any | null> => {
   try {
     const text = await res.text()
@@ -250,13 +298,46 @@ const isSuccessResponse = (res: any): boolean => {
   return false
 }
 
+// ── Edit Form Logic ───────────────────────────────────────
 const editForm = ref({ show: false, ma_show: '', ten_show: '', ngay: '', gio: '', diachi: '', ten_khachhang: '', sdt: '', ma_loai_show: '' })
 const gioError = ref(false)
 
-const validateGio = () => {
-  const val = editForm.value.gio.trim()
-  if (!val) { gioError.value = false; return }
-  gioError.value = !/^\d{2}:\d{2}$/.test(val)
+const formattedDateForModal = computed(() => {
+  const val = editForm.value.ngay?.trim() || ''
+  if (val.includes('/')) {
+    const [d, m, y] = val.split('/')
+    return `${y}-${m?.padStart(2,'0')}-${d?.padStart(2,'0')}`
+  }
+  return val
+})
+
+const onModalDateChange = (e: Event) => {
+  const v = (e.target as HTMLInputElement).value
+  if (!v) return
+  const [y, m, d] = v.split('-')
+  if (y && m && d) editForm.value.ngay = `${d}/${m}/${y}`
+}
+
+const formatTimeInput = (e: Event) => {
+  const input = e.target as HTMLInputElement
+  let val = input.value.replace(/[^\d:]/g, '')
+  if (val.includes(':')) {
+    const [p1, p2 = ''] = val.split(':')
+    let hh = p1.slice(0,2), mm = p2.slice(0,2)
+    if (hh.length === 2 && parseInt(hh) > 23) hh = '23'
+    if (mm.length === 2 && parseInt(mm) > 59) mm = '59'
+    val = hh + ':' + mm
+  } else {
+    const digits = val.replace(/\D/g,'').slice(0,4)
+    if (digits.length >= 3) {
+      let hh = digits.slice(0,2), mm = digits.slice(2,4)
+      if (parseInt(hh) > 23) hh = '23'
+      val = hh + ':' + mm
+    } else { val = digits }
+  }
+  editForm.value.gio = val
+  input.value = val
+  gioError.value = val !== '' && !/^\d{2}:\d{2}$/.test(val)
 }
 
 const closeEditForm = () => {
@@ -304,6 +385,7 @@ const submitEditForm = async () => {
   }
 }
 
+// ── Delete Confirm Modal ──────────────────────────────────
 const confirmModal = ref<{ show: boolean; message: string; target: Schedule | null }>({
   show: false, message: '', target: null
 })
@@ -340,11 +422,12 @@ const confirmAction = async () => {
   }
 }
 
+// ── Data Mapping & Fetching ──────────────────────────────
 const getStatusClass = (s: string): Schedule['statusClass'] => {
   const v = (s || '').trim().toLowerCase()
-  if (v === 'đã diễn')       return 'played'
-  if (v === 'chưa diễn')     return 'not-played'
-  if (v === 'đã hủy')        return 'cancelled'
+  if (v === 'đã diễn')      return 'played'
+  if (v === 'chưa diễn')    return 'not-played'
+  if (v === 'đã hủy')       return 'cancelled'
   return 'default'
 }
 
@@ -356,10 +439,10 @@ const mapItem = (item: any, index: number): Schedule => {
     id:           uniqueId,
     name:         item.ten_show || 'Chưa có tên',
     type:         item.ma_loai_show || item.loai_show || item.ten_loai_show || 'Show diễn',
-    date:         item.ngay   || 'Chưa cập nhật',
-    time:         item.gio    || 'Chưa cập nhật',
-    location:     item.diachi || item.dia_chi || 'Chưa cập nhật',
-    phone:        item.sdt    || 'Chưa cập nhật',
+    date:         item.ngay     || 'Chưa cập nhật',
+    time:         item.gio      || 'Chưa cập nhật',
+    location:     item.diachi   || item.dia_chi || 'Chưa cập nhật',
+    phone:        item.sdt      || 'Chưa cập nhật',
     status:       rawStatus,
     statusClass:  getStatusClass(rawStatus),
     rawType:      item.ma_loai_show || item.loai_show || item.ten_loai_show || '',
@@ -396,7 +479,6 @@ const fetchSchedules = async () => {
 }
 
 const goToDetail = (id: string | number) => router.push({ name: 'ChiTietShow', params: { id } })
-
 const goToRegister = (item: Schedule) => {
   router.push({ name: 'DangKyShow', params: { id: item.id || 'default' }, query: { showName: item.name } })
 }
@@ -407,115 +489,120 @@ onMounted(() => {
 
 onUnmounted(() => {
   allSchedules.value = []
-  searchKeyword.value = ''
 })
 </script>
 
 <style scoped>
-.schedule-page { min-height: 100vh; background: #f6f1f1; }
-.schedule-page__header { background: linear-gradient(180deg, #8f0000 0%, #a50000 55%, #cf0000 100%); color: #fff; padding: 14px 16px; }
-.schedule-page__inner   { max-width: 760px; margin: 0 auto; }
-.schedule-page__subtitle { margin: 5px 0 0; text-align: center; font-size: 14px; color: rgba(255,255,255,.95); }
-.schedule-page__content { padding: 12px 10px 60px; }
-
-/* BỘ LỌC 1 Ô TÌM KIẾM DUY NHẤT */
-.search-box {
-  max-width: 760px;
-  margin: 0 auto 12px;
-  display: flex;
-  align-items: center;
+/* TRANG NỀN TRẮNG HOÀN TOÀN */
+.schedule-page { 
+  min-height: 100vh; 
+  background: #ffffff; 
+  position: relative; 
 }
 
-.search-field {
-  width: 100%;
-  position: relative;
-  display: flex;
-  align-items: center;
-  background: #fff;
-  border: 1px solid #cbd5e1;
-  border-radius: 10px;
-  padding: 0 10px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+.schedule-page__content { padding: 6px 12px 40px; }
+
+/* LOADING OVERLAY KHÓA TOÀN BỘ MÀN HÌNH */
+.loading-overlay {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(3px);
+  display: flex; flex-direction: column;
+  justify-content: center; align-items: center;
+  z-index: 99999; pointer-events: all;
 }
 
-.search-icon {
-  font-size: 14px;
-  margin-right: 8px;
-  color: #64748b;
-  flex-shrink: 0;
-}
-
-.search-input {
-  width: 100%;
-  height: 38px;
-  border: none;
-  outline: none;
-  background: transparent;
-  font-size: 13px;
-  color: #1e293b;
-  font-weight: 500;
-  min-width: 0;
-}
-
-.clear-btn {
-  border: none;
-  background: none;
-  color: #94a3b8;
-  font-size: 13px;
-  cursor: pointer;
-  padding: 0 4px;
-  flex-shrink: 0;
-}
-
-.clear-btn:hover { color: #dc2626; }
-
-/* LOADING STATE */
-.loading-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 40px 15px;
-  gap: 12px;
-}
-
-.spinner {
-  width: 36px;
-  height: 36px;
-  border: 3.5px solid rgba(143, 0, 0, 0.15);
-  border-top-color: #8f0000;
+.loading-spinner {
+  width: 36px; height: 36px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #ffffff;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
 
 .loading-text {
-  font-size: 14px;
-  font-weight: 600;
-  color: #8f0000;
-  margin: 0;
+  margin-top: 10px; color: #ffffff;
+  font-size: 13px; font-weight: 600; letter-spacing: 0.3px;
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.fade-enter-active, .fade-leave-active { transition: opacity 0.25s ease; }
+.fade-enter-from, .fade-leave-to { opacity: 0; }
+
+/* CÔNG CỤ TÌM KIẾM CỐ ĐỊNH KHI LƯỚT XUỐNG - CĂN PHẢI */
+.filter-bar-text {
+  max-width: 760px;
+  margin: 0 auto 12px;
+  padding: 6px 10px;
+  background: #ffffff;
+  border: 1px solid #f1f5f9;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  position: sticky;
+  top: 44px;
+  z-index: 9;
 }
 
-.state-message         { text-align: center; padding: 30px 15px; font-weight: 700; color: #8f0000; font-size: 15px; }
+.filter-row-right {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+/* Nút sắp xếp */
+.sort-toggle-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px 6px;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.sort-icon {
+  width: 15px;
+  height: 15px;
+  stroke: #475569;
+  flex-shrink: 0;
+}
+
+.sort-label {
+  font-size: 12px;
+  color: #475569;
+  font-weight: 500;
+}
+
+.state-message         { text-align: center; padding: 24px 15px; font-weight: 700; color: #8f0000; font-size: 14px; }
 .state-message--error { color: #dc2626; }
-.schedule-list         { max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 8px; }
 
-/* CARD SHOW */
-.schedule-card {
-  background: #fff;
-  border-radius: 14px;
-  padding: 10px 12px;
-  border: 1px solid #ececec;
-  box-shadow: 0 4px 10px rgba(143,0,0,.04);
-  border-left: 5px solid #9ca3af;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+/* TĂNG GAP VÀ TẠO KHOẢNG CÁCH RỘNG GIỮA CÁC THẺ SHOW */
+.schedule-list { 
+  max-width: 760px; 
+  margin: 0 auto; 
+  display: flex; 
+  flex-direction: column; 
+  gap: 12px; 
 }
-.schedule-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(143, 0, 0, 0.08);
+
+/* THẺ SHOW CARD RỘNG RÃI & RÕ RÀNG */
+.schedule-card { 
+  background: #fff; 
+  border-radius: 10px; 
+  padding: 12px 14px; 
+  border: 1px solid #e2e8f0; 
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04); 
+  border-left: 5px solid #9ca3af; 
 }
 
 .schedule-card--played     { border-left-color: #16a34a; }
@@ -524,77 +611,70 @@ onUnmounted(() => {
 .schedule-card--expired    { border-left-color: #6b7280; }
 .schedule-card--default    { border-left-color: #9ca3af; }
 
-.schedule-card__top  { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
-.schedule-card__name { font-size: 16px; font-weight: 800; color: #8f0000; line-height: 1.2; }
-.schedule-card__tag  { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 999px; white-space: nowrap; }
+.schedule-card__top  { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+.schedule-card__name { font-size: 15px; font-weight: 800; color: #8f0000; line-height: 1.3; }
+.schedule-card__tag  { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
 .schedule-card__tag--played     { color: #15803d; background: #ecfdf3; }
 .schedule-card__tag--not-played { color: #a16207; background: #fffbea; }
 .schedule-card__tag--cancelled  { color: #be123c; background: #fff1f2; }
 .schedule-card__tag--expired    { color: #374151; background: #f3f4f6; }
 .schedule-card__tag--default    { color: #4b5563; background: #f3f4f6; }
 
-.schedule-card__content { display: flex; flex-direction: column; gap: 4px; }
-.schedule-card__line    { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
-.schedule-card__key     { font-size: 13px; font-weight: 700; color: #8f0000; }
-.schedule-card__key--inline { margin-left: 10px; }
-.schedule-card__value   { font-size: 13px; font-weight: 500; color: #444; }
-.schedule-card__actions { margin-top: 4px; display: flex; justify-content: flex-end; gap: 8px; align-items: center; }
+.schedule-card__content { display: flex; flex-direction: column; gap: 5px; }
+.schedule-card__line    { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; font-size: 12px; line-height: 1.4; }
+.schedule-card__key      { font-weight: 700; color: #8f0000; }
+.schedule-card__key--inline { margin-left: 8px; }
+.schedule-card__value   { font-weight: 500; color: #334155; }
+.schedule-card__actions { margin-top: 6px; display: flex; justify-content: flex-end; gap: 8px; align-items: center; }
 
-/* BUTTONS */
-.btn {
-  border: none;
-  border-radius: 999px;
-  padding: 6px 14px;
-  color: #fff;
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-.btn:active:not(:disabled) { transform: scale(0.95); }
+/* SKELETON ANIMATION */
+.skeleton-card { border-left-color: #cbd5e1; height: 110px; display: flex; flex-direction: column; justify-content: center; gap: 8px; }
+.skeleton-line { background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%); background-size: 200% 100%; animation: skeleton-loading 1.5s infinite; border-radius: 4px; }
+.skeleton-title { height: 16px; width: 50%; }
+.skeleton-text { height: 12px; width: 85%; }
+.skeleton-text.short { width: 35%; }
+@keyframes skeleton-loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+/* NÚT BẤM TO VÀ DỄ BẤM HƠN */
+.btn { border: none; border-radius: 999px; padding: 6px 14px; color: #fff; font-size: 12px; font-weight: 600; cursor: pointer; transition: opacity .15s; }
 .btn:disabled { opacity: .4; cursor: not-allowed; }
 .btn--red   { background: #8f0000; } .btn--red:hover:not(:disabled)   { background: #a50000; }
 .btn--gray  { background: #475569; } .btn--gray:hover:not(:disabled)  { background: #334155; }
 .btn--green { background: #16a34a; } .btn--green:hover:not(:disabled) { background: #15803d; }
 
-/* MODALS */
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.4); display: flex; align-items: center; justify-content: center; z-index: 200; padding: 16px; }
 
-.edit-box { background: #fff; border-radius: 16px; padding: 18px 16px; width: 100%; max-width: 360px; box-shadow: 0 10px 30px rgba(0,0,0,.18); max-height: 90vh; overflow-y: auto; }
-.edit-title  { margin: 0 0 14px; font-size: 15px; font-weight: 800; color: #8f0000; text-align: center; }
+.edit-box { background: #fff; border-radius: 12px; padding: 16px; width: 100%; max-width: 380px; box-shadow: 0 10px 30px rgba(0,0,0,.18); max-height: 90vh; overflow-y: auto; }
+.edit-title  { margin: 0 0 12px; font-size: 15px; font-weight: 800; color: #8f0000; text-align: center; }
 .edit-fields { display: flex; flex-direction: column; gap: 10px; }
-.edit-row    { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.edit-row    { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .edit-field  { display: flex; flex-direction: column; gap: 3px; }
 .edit-label  { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; }
-.edit-input  { border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 7px 10px; font-size: 13px; color: #1e293b; outline: none; transition: border-color .15s; }
-.edit-input:focus    { border-color: #2563eb; }
-.edit-input--error   { border-color: #dc2626 !important; }
-.edit-error          { font-size: 11px; font-weight: 600; color: #dc2626; }
-.edit-actions        { margin-top: 14px; display: flex; gap: 8px; }
-.edit-actions .btn   { flex: 1; padding: 9px; font-size: 13px; }
+.edit-input  { border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px 10px; font-size: 13px; color: #1e293b; outline: none; transition: border-color .15s; background: #f8fafc; }
+.edit-input:focus  { border-color: #2563eb; background: #fff; }
+.edit-input--error { border-color: #dc2626 !important; }
+.edit-error        { font-size: 11px; font-weight: 600; color: #dc2626; }
+.edit-actions      { margin-top: 12px; display: flex; gap: 8px; }
+.edit-actions .btn { flex: 1; padding: 8px; font-size: 13px; }
 
-.confirm-box { background: #fff; border-radius: 14px; padding: 16px 14px; max-width: 280px; width: 100%; box-shadow: 0 8px 24px rgba(0,0,0,.18); text-align: center; }
-.confirm-msg { font-size: 14px; font-weight: 700; color: #1e293b; margin: 0 0 14px; line-height: 1.5; }
+.confirm-box { background: #fff; border-radius: 12px; padding: 16px; max-width: 280px; width: 100%; box-shadow: 0 8px 24px rgba(0,0,0,.18); text-align: center; }
+.confirm-msg { font-size: 14px; font-weight: 700; color: #1e293b; margin: 0 0 12px; line-height: 1.4; }
 .confirm-actions { display: flex; gap: 8px; }
-.confirm-actions .btn { flex: 1; padding: 8px 10px; }
+.confirm-actions .btn { flex: 1; padding: 8px; }
 
-.toast-pill { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); padding: 8px 18px; border-radius: 999px; font-size: 13px; font-weight: 700; color: #fff; box-shadow: 0 4px 14px rgba(0,0,0,.18); z-index: 300; display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+.toast-pill { position: fixed; top: 12px; left: 50%; transform: translateX(-50%); padding: 8px 16px; border-radius: 999px; font-size: 13px; font-weight: 700; color: #fff; box-shadow: 0 4px 14px rgba(0,0,0,.18); z-index: 30000; display: flex; align-items: center; gap: 6px; white-space: nowrap; }
 .toast-pill--success { background: #15803d; }
 .toast-pill--error   { background: #dc2626; }
+.toast-enter-active, .toast-leave-active { transition: opacity .3s, transform .3s; }
+.toast-enter-from, .toast-leave-to { opacity: 0; transform: translateX(-50%) translateY(-8px); }
 
-/* TRANSITIONS */
-.fade-enter-active, .fade-leave-active { transition: opacity 0.2s ease; }
-.fade-enter-from, .fade-leave-to { opacity: 0; }
-
-.slide-down-enter-active, .slide-down-leave-active { transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
-.slide-down-enter-from, .slide-down-leave-to { opacity: 0; transform: translate(-50%, -20px); }
-
-@media (max-width: 640px) {
-  .search-input, .edit-input { font-size: 16px !important; }
-  .schedule-card { padding: 10px; }
-  .schedule-card__name { font-size: 15px; }
-  .schedule-card__key, .schedule-card__value { font-size: 12px; }
-  .btn { font-size: 11px; padding: 5px 11px; }
+/* RESPONSIVE LAYOUT */
+@media (max-width: 639px) {
+  .sort-label { font-size: 11px; }
+  .schedule-card { padding: 10px 12px; }
+  .schedule-card__name { font-size: 14px; }
+  .schedule-card__line { font-size: 11px; }
+  .btn { font-size: 11px; padding: 5px 12px; }
   .edit-row { grid-template-columns: 1fr; }
 }
 </style>

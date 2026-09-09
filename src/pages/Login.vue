@@ -1,5 +1,12 @@
 <template>
-  <div class="login">
+  <div class="login-wrapper">
+    <!-- Lớp ảnh nền xử lý mờ (blur) -->
+    <div 
+      class="login__bg" 
+      :style="{ backgroundImage: `url(${bgImage})` }"
+    ></div>
+
+    <!-- Khung đăng nhập nổi lên trên -->
     <div class="login__card">
       <div class="login__logoWrap">
         <img :src="logo" alt="Logo" class="login__logo" />
@@ -45,6 +52,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import logo from '../assets/logo 2008.jpg'
+import bgImage from '../assets/nenlogin.jpg'
 import { API_ENDPOINTS } from '../config/api'
 
 const router = useRouter()
@@ -96,26 +104,41 @@ const handleLogin = async () => {
 </script>
 
 <style scoped>
-.login {
+.login-wrapper {
+  position: relative;
   min-height: 100vh;
   display: grid;
   place-items: center;
   padding: 20px;
-  background:
-    radial-gradient(circle at 20% 20%, rgba(255,255,255,.14), transparent 35%),
-    radial-gradient(circle at 80% 80%, rgba(255,255,255,.10), transparent 35%),
-    linear-gradient(135deg, #4b0000 0%, #8f0000 45%, #c40000 100%);
+  overflow: hidden;
 }
 
+/* Ảnh nền được làm mờ nét (blur) */
+.login__bg {
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  right: -10px;
+  bottom: -10px;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: blur(2px); /* Chỉnh độ mờ nhòe ảnh nền tại đây (6px, 8px, 12px) */
+  transform: scale(1.05); /* Tránh viền trắng xung quanh do filter blur */
+  z-index: 0;
+}
+
+/* Khung form nổi bật lên trên */
 .login__card {
+  position: relative;
+  z-index: 1;
   width: 100%;
-  max-width: 380px;
-  background: rgba(255, 236, 236, 0.96); /* đỏ nhạt */
-  border: 1px solid rgba(255, 214, 214, 0.9);
+  max-width: 380px;   
+  background: rgba(0, 0, 0, 0.25); /* Nền mỏng xuyên thấu */
+  border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 18px;
   padding: 22px 18px 18px;
-  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.22);
-  backdrop-filter: blur(2px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
 
 .login__logoWrap {
@@ -130,17 +153,18 @@ const handleLogin = async () => {
   border-radius: 50%;
   display: block;
   margin: 0 auto 10px;
-  border: 3px solid #fff;
-  box-shadow: 0 4px 10px rgba(143, 0, 0, 0.15);
+  border: 2px solid #ef4444;
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.4);
 }
 
 .login__title {
   margin: 0;
-  font-size: 24px; /* chữ nhỏ hơn */
+  font-size: 24px;
   line-height: 1.15;
   font-weight: 800;
-  color: #7a0000;
-  letter-spacing: 0.2px;
+  color: #ffffff;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+  letter-spacing: 0.5px;
 }
 
 .login__form {
@@ -157,26 +181,32 @@ const handleLogin = async () => {
 .login__label {
   font-size: 13px;
   font-weight: 700;
-  color: #7a0000;
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
 }
 
 .login__input {
   width: 100%;
   box-sizing: border-box;
-  border: 1px solid #efc9c9;
+  border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 12px;
   height: 42px;
   padding: 0 12px;
   outline: none;
   font-size: 14px;
-  color: #222;
-  background: #fff;
-  transition: border-color .2s, box-shadow .2s;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.3);
+  transition: all .2s ease;
+}
+
+.login__input::placeholder {
+  color: rgba(255, 255, 255, 0.6);
 }
 
 .login__input:focus {
-  border-color: #c24141;
-  box-shadow: 0 0 0 3px rgba(194, 65, 65, 0.14);
+  border-color: #ef4444;
+  background: rgba(0, 0, 0, 0.5);
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
 }
 
 .login__button {
@@ -184,20 +214,21 @@ const handleLogin = async () => {
   height: 44px;
   border: none;
   border-radius: 12px;
-  background: linear-gradient(180deg, #c53030 0%, #a61b1b 100%);
+  background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
   color: #fff;
   font-size: 16px;
   font-weight: 800;
   letter-spacing: .2px;
   cursor: pointer;
-  margin-top: 4px;
-  box-shadow: 0 8px 16px rgba(166, 27, 27, 0.25);
+  margin-top: 6px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
   transition: transform .12s ease, box-shadow .12s ease, opacity .2s;
 }
 
 .login__button:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 10px 18px rgba(166, 27, 27, 0.3);
+  box-shadow: 0 8px 20px rgba(220, 38, 38, 0.5);
+  background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
 }
 
 .login__button:active:not(:disabled) {
@@ -205,7 +236,7 @@ const handleLogin = async () => {
 }
 
 .login__button:disabled {
-  opacity: .75;
+  opacity: .6;
   cursor: not-allowed;
 }
 
@@ -218,7 +249,8 @@ const handleLogin = async () => {
   margin: 10px 0 0;
   font-size: 13px;
   font-weight: 700;
-  color: #dc2626;
+  color: #f87171;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
   text-align: center;
 }
 
