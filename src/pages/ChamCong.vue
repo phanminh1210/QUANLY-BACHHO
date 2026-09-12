@@ -2,6 +2,7 @@
 import { computed, ref, onMounted, watch } from 'vue'
 import { API_ENDPOINTS } from '../config/api'
 import ButtonChiTiet from "../components/common/ButtonChiTiet.vue"
+import HeaderQuayLai from '../components/common/HeaderQuayLai.vue'
 
 interface AttendanceItem {
   id: string
@@ -359,16 +360,7 @@ const toggleSortDate = () => {
 
 <template>
   <div class="schedule-page">
-    <header class="schedule-page__header">
-      <div class="schedule-page__inner header-content">
-        <button class="back-btn" type="button" @click="goBack" aria-label="Quay lại">
-          <svg class="back-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="15 18 9 12 15 6"></polyline>
-          </svg>
-        </button>
-        <span class="header-title">Danh sách chấm công nhân sự</span>
-      </div>
-    </header>
+    <HeaderQuayLai title="Danh sách chấm công" />
 
     <section class="schedule-page__content">
       <!-- Bảng 1: Tiền Show -->

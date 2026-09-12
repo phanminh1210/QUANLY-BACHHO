@@ -19,7 +19,7 @@
 
     <!-- HEADER: SỬ DỤNG COMPONENT CHUNG -->
     <div class="header-wrapper">
-      <HeaderQuayLai title="DANH SÁCH NHÂN SỰ" />
+      <HeaderQuayLai title="Danh sách nhân sự" />
       <button class="add-btn" type="button" @click="openAddModal" aria-label="Thêm nhân sự">
         <svg class="add-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -53,7 +53,6 @@
 
           <div class="staff-info">
             <span class="staff-name">{{ item.ten_ns || '-' }}</span>
-            <!-- Chỉ hiển thị SĐT -->
             <span class="staff-meta" v-if="item.sdt">
               {{ item.sdt }}
             </span>
@@ -123,7 +122,7 @@
               <input v-model="formData.ma_ns" type="text" class="form-input disabled-input" disabled />
             </div>
 
-            <!-- TÊN NHÂN SỰ: Làm mờ và khoá chỉnh sửa khi isEditMode = true -->
+            <!-- TÊN NHÂN SỰ -->
             <div class="form-group">
               <label class="form-label">Tên nhân sự <span v-if="!isEditMode" class="req">*</span></label>
               <input 
@@ -176,6 +175,7 @@
               <div class="form-group">
                 <label class="form-label">Vai trò <span class="req">*</span></label>
                 <select v-model="formData.vai_tro" class="form-input" @change="handleRoleChange" required>
+                  <option value="" disabled>-- Chọn vai trò --</option>
                   <option value="NV">NV</option>
                   <option value="Admin">Admin</option>
                 </select>
@@ -183,6 +183,7 @@
               <div class="form-group">
                 <label class="form-label">Quyền <span class="req">*</span></label>
                 <select v-model="formData.quyen" class="form-input" :disabled="formData.vai_tro === 'Admin'" required>
+                  <option value="" disabled>-- Chọn quyền --</option>
                   <option v-if="formData.vai_tro === 'Admin'" value="ALL">Toàn quyền (ALL)</option>
                   <template v-else>
                     <option value="XEM">Chỉ xem</option>
@@ -199,10 +200,17 @@
           </fieldset>
 
           <div class="popup-card__actions">
-            <button class="action-btn action-btn--submit" type="submit" :disabled="submitting">
-              {{ submitting ? 'Đang lưu...' : (isEditMode ? 'Cập nhật' : 'Thêm mới') }}
-            </button>
-            <button class="close-btn" type="button" :disabled="submitting" @click="closeFormModal">Hủy</button>
+            <ButtonHuy 
+              type="button"
+              :disabled="submitting" 
+              @click="closeFormModal" 
+            />
+            
+            <ButtonLuu 
+              type="submit" 
+              :text="submitting ? 'Đang lưu...' : 'Lưu'" 
+              :disabled="submitting" 
+            />
           </div>
         </form>
       </div>
@@ -215,6 +223,11 @@ import { onMounted, ref, reactive } from 'vue'
 import { API_ENDPOINTS } from '../config/api'
 import defaultAvatar from '../assets/lan.webp'
 import HeaderQuayLai from '../components/common/HeaderQuayLai.vue'
+import ButtonLuu from '../components/common/ButtonLuu.vue'
+import ButtonHuy from '../components/common/ButtonHuy.vue'
+
+// Import CSS thông báo từ file riêng
+import '../styles/thanhcong.css'
 
 type StaffItem = {
   ma_ns: string
@@ -260,7 +273,6 @@ const showToast = (message: string, type: 'success' | 'error' = 'success') => {
   }, 3500)
 }
 
-// Kiểm tra xem nhân sự có phải Admin hay không
 const isAdminRole = (role?: string) => {
   if (!role) return false
   return role.trim().toUpperCase().includes('ADMIN')
@@ -274,15 +286,15 @@ const formData = reactive({
   sdt: '',
   tai_khoan: '',
   mat_khau: '',
-  vai_tro: 'NV',
-  quyen: 'XEM',
+  vai_tro: '',
+  quyen: '',
   ghi_chu: ''
 })
 
 const handleRoleChange = () => {
   if (formData.vai_tro === 'Admin') {
     formData.quyen = 'ALL'
-  } else if (formData.quyen === 'ALL') {
+  } else if (formData.quyen === 'ALL' || !formData.quyen) {
     formData.quyen = 'XEM'
   }
 }
@@ -295,8 +307,8 @@ const resetForm = () => {
   formData.sdt = ''
   formData.tai_khoan = ''
   formData.mat_khau = ''
-  formData.vai_tro = 'NV'
-  formData.quyen = 'XEM'
+  formData.vai_tro = ''
+  formData.quyen = ''
   formData.ghi_chu = ''
   passwordError.value = ''
 }
@@ -308,7 +320,7 @@ const safeFetch = async (url: string) => {
   try {
     return JSON.parse(textData)
   } catch (e) {
-    if (textData.includes('Google') || textData.includes('Redirecting')) {
+    if (textData.includes('Google') || textData.includes('Redirecting') || textData.includes('success')) {
       return { code: 200, status: 'success' }
     }
     throw new Error('Không thể phân tích dữ liệu phản hồi từ máy chủ')
@@ -415,13 +427,25 @@ const handleSubmitForm = async () => {
 
     const json = await safeFetch(url)
 
+    // Kiểm tra kết quả phản hồi linh hoạt hơn
     const isEmptyObject = json && typeof json === 'object' && Object.keys(json).length === 0
-    const isSuccess = isEmptyObject || json?.code === 200 || json?.status === 'success' || json?.result === 'success'
+    const isSuccess = 
+      isEmptyObject || 
+      json?.code === 200 || 
+      json?.status === 'success' || 
+      json?.result === 'success' ||
+      !json?.message
 
     if (isSuccess) {
       showToast(isEditMode.value ? 'Cập nhật nhân sự thành công!' : 'Thêm nhân sự mới thành công!', 'success')
-      closeFormModal()
-      closeDetail()
+      
+      // Ép tắt tất cả các Modal/Popup lập tức
+      addVisible.value = false
+      editVisible.value = false
+      detailVisible.value = false
+      selectedStaff.value = null
+
+      // Tải lại danh sách sau khi đóng popup
       await fetchStaff()
     } else {
       throw new Error(json?.message || (isEditMode.value ? 'Cập nhật thất bại' : 'Thêm mới thất bại'))
@@ -449,7 +473,6 @@ onMounted(fetchStaff)
 <style scoped>
 .nhansu-page { min-height: 100vh; background: #ffffff; padding-bottom: 30px; position: relative; }
 
-/* WRAPPER BỌC HEADER VÀ NÚT THÊM MỚI */
 .header-wrapper {
   position: relative;
   max-width: 760px;
@@ -482,40 +505,6 @@ onMounted(fetchStaff)
   flex-shrink: 0;
 }
 
-.toast-container {
-  position: fixed;
-  top: 16px;
-  right: 16px;
-  z-index: 99999;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  max-width: 320px;
-  pointer-events: none;
-}
-
-.toast-item {
-  pointer-events: auto;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 16px;
-  border-radius: 8px;
-  color: #ffffff;
-  font-size: 13px;
-  font-weight: 600;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
-}
-
-.toast-item--success { background-color: #10b981; }
-.toast-item--error { background-color: #ef4444; }
-
-.toast-icon { font-size: 15px; font-weight: 900; }
-
-.toast-enter-active, .toast-leave-active { transition: all 0.3s ease; }
-.toast-enter-from { opacity: 0; transform: translateX(50px); }
-.toast-leave-to { opacity: 0; transform: translateY(-20px); }
-
 .nhansu-page__content { max-width: 600px; margin: 0 auto; padding: 12px; }
 
 .state-msg { text-align: center; font-size: 13px; padding: 20px; color: #8f0000; font-weight: 700; }
@@ -524,7 +513,6 @@ onMounted(fetchStaff)
 
 .staff-list { display: flex; flex-direction: column; gap: 14px; }
 
-/* BASE BAR STYLES */
 .staff-bar {
   display: flex;
   align-items: center;
@@ -537,7 +525,6 @@ onMounted(fetchStaff)
 
 .staff-bar:hover { transform: translateX(4px); }
 
-/* MÀU VÀNG ĐỒNG CHO ADMIN */
 .staff-bar--admin {
   background: linear-gradient(180deg, #ffe359 0%, #eab308 50%, #ca8a04 100%);
   box-shadow: 0 4px 10px rgba(180, 83, 9, 0.25);
@@ -546,7 +533,6 @@ onMounted(fetchStaff)
 .staff-bar--admin .staff-name { color: #450a0a; }
 .staff-bar--admin .staff-meta { color: #78350f; font-weight: 600; }
 
-/* MÀU XÁM TRẮNG CHO NHÂN VIÊN THƯỜNG */
 .staff-bar--default {
   background: linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%);
   border: 1px solid #e2e8f0;
@@ -694,10 +680,7 @@ onMounted(fetchStaff)
 }
 
 .action-btn--edit { background: #8f0000; color: #ffffff; }
-.action-btn--submit { background: #8f0000; color: #ffffff; }
 .close-btn { background: #94a3b8; color: #ffffff; }
-
-.action-btn:disabled, .close-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
 .loading-overlay {
   position: absolute;

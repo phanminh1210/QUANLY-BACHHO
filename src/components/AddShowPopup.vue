@@ -53,18 +53,18 @@
         </div>
 
         <div class="popup-form__row">
-  <label class="popup-form__label">Giờ</label>
-  <div class="popup-form__control">
-    <input
-      v-model="form.time"
-      type="text"
-      class="popup-form__input"
-      placeholder="VD: 19:30"
-      maxlength="5"
-      @input="formatTimeInput"
-    />
-  </div>
-</div>
+          <label class="popup-form__label">Giờ</label>
+          <div class="popup-form__control">
+            <input
+              v-model="form.time"
+              type="text"
+              class="popup-form__input"
+              placeholder="VD: 19:30"
+              maxlength="5"
+              @input="formatTimeInput"
+            />
+          </div>
+        </div>
 
         <div class="popup-form__row">
           <label class="popup-form__label">Tên khách hàng</label>
@@ -104,7 +104,6 @@
           <div class="popup-form__control">
             <input v-model.number="form.so_lan" type="number" min="0"
               class="popup-form__input popup-form__input--qty" />
-            
           </div>
         </div>
 
@@ -112,7 +111,6 @@
           <label class="popup-form__label">Trống chính</label>
           <div class="popup-form__control popup-form__inline">
             <input v-model="form.co_trong" type="checkbox" />
-            
           </div>
         </div>
 
@@ -120,7 +118,6 @@
           <label class="popup-form__label">Thần tài</label>
           <div class="popup-form__control popup-form__inline">
             <input v-model="form.co_than_tai" type="checkbox" />
-          
           </div>
         </div>
 
@@ -128,7 +125,6 @@
           <label class="popup-form__label">Xỏa</label>
           <div class="popup-form__control popup-form__inline">
             <input v-model="form.co_xoa" type="checkbox" />
-            
           </div>
         </div>
 
@@ -136,7 +132,6 @@
           <label class="popup-form__label">Lò</label>
           <div class="popup-form__control popup-form__inline">
             <input v-model="form.co_lo" type="checkbox" />
-            
           </div>
         </div>
 
@@ -146,7 +141,6 @@
             <input v-model="form.co_trong_hoi" type="checkbox" />
             <input v-if="form.co_trong_hoi" v-model.number="form.so_trong_hoi"
               type="number" min="0" class="popup-form__input popup-form__input--qty" placeholder="Số lượng" />
-           
           </div>
         </div>
 
@@ -154,7 +148,6 @@
           <label class="popup-form__label">Rồng đơn</label>
           <div class="popup-form__control popup-form__inline">
             <input v-model="form.co_rong_don" type="checkbox" />
-            
           </div>
         </div>
 
@@ -162,7 +155,6 @@
           <label class="popup-form__label">Rồng gậy</label>
           <div class="popup-form__control popup-form__inline">
             <input v-model="form.co_rong_gay" type="checkbox" />
-            
           </div>
         </div>
 
@@ -185,35 +177,38 @@
             <label class="popup-form__label">Ngộ không</label>
             <div class="popup-form__control popup-form__inline">
               <input v-model="form.co_ngo_khong" type="checkbox" />
-              
             </div>
           </div>
           <div class="popup-form__row">
             <label class="popup-form__label">Bát giới</label>
             <div class="popup-form__control popup-form__inline">
               <input v-model="form.co_bat_gioi" type="checkbox" />
-              
             </div>
           </div>
           <div class="popup-form__row">
             <label class="popup-form__label">Ông địa</label>
             <div class="popup-form__control popup-form__inline">
               <input v-model="form.co_ong_dia" type="checkbox" />
-              
             </div>
           </div>
         </template>
 
-       <!-- TỔNG BẢN GHI -->
-<div v-if="tongBanGhi > 0" class="popup-form__summary">
-  Tổng là <strong>{{ tongBanGhi }}</strong> nhân sự cho show này
-</div>
+        <!-- TỔNG BẢN GHI -->
+        <div v-if="tongBanGhi > 0" class="popup-form__summary">
+          Tổng là <strong>{{ tongBanGhi }}</strong> nhân sự cho show này
+        </div>
 
         <div class="popup-form__actions">
-          <button type="button" class="popup-form__btn popup-form__btn--cancel"
-            @click="closePopup" :disabled="saving">Hủy</button>
-          <button type="submit" class="popup-form__btn popup-form__btn--save"
-            :disabled="saving">{{ saving ? 'Đang lưu...' : 'Lưu' }}</button>
+          <ButtonHuy 
+            :disabled="saving" 
+            @click="closePopup" 
+          />
+          
+          <ButtonLuu 
+            type="submit" 
+            :text="saving ? 'Đang lưu...' : 'Lưu'" 
+            :disabled="saving" 
+          />
         </div>
       </form>
     </div>
@@ -223,6 +218,8 @@
 <script setup lang="ts">
 import { computed, reactive, watch, ref } from 'vue'
 import { API_ENDPOINTS } from '../config/api'
+import ButtonLuu from '../components/common/ButtonLuu.vue'
+import ButtonHuy from '../components/common/ButtonHuy.vue'
 
 const props = defineProps<{ visible: boolean }>()
 const emit  = defineEmits<{ (e: 'close'): void; (e: 'saved'): void }>()
@@ -243,7 +240,6 @@ const showToast = (message: string, type: 'success' | 'error') => {
 
 const formatTimeInput = (e: Event) => {
   const input = e.target as HTMLInputElement
- // const cursor = input.selectionStart ?? 
 
   // Chỉ giữ số và dấu :
   let val = input.value.replace(/[^\d:]/g, '')
@@ -282,7 +278,7 @@ const formatTimeInput = (e: Event) => {
     }
   }
 
-  form.time  = val
+  form.time   = val
   input.value = val
 }
 
@@ -377,14 +373,14 @@ const submitForm = async () => {
     if (tongBanGhi.value > 0) {
       const urlCC = API_ENDPOINTS.THEM_DANH_SACH_VAI_TRO_SHOW({
         ma_show:      maShow,
-        ten_show:     form.name,
+        ten_show:      form.name,
         ngay_lamviec: form.date,
-        so_lan:       form.so_lan,
+        so_lan:        form.so_lan,
         so_trong_hoi: form.co_trong_hoi ? form.so_trong_hoi : 0,
-        so_chinh:     form.co_trong ? 1 : 0,
+        so_chinh:      form.co_trong ? 1 : 0,
         co_than_tai:  form.co_than_tai,
-        co_xoa:       form.co_xoa,
-        co_lo:        form.co_lo,
+        co_xoa:        form.co_xoa,
+        co_lo:         form.co_lo,
         co_rong_don:  form.co_rong_don,
         co_rong_gay:  form.co_rong_gay,
         so_rong_khuc: form.co_rong_khuc ? form.so_rong_khuc : 0,
@@ -393,7 +389,7 @@ const submitForm = async () => {
         co_ong_dia:   form.co_ong_dia,
       })
 
-      const resCC  = await fetch(urlCC)
+      const resCC    = await fetch(urlCC)
       if (!resCC.ok) throw new Error(`HTTP ${resCC.status}`)
       const jsonCC = await resCC.json()
       if (!jsonCC?.success) throw new Error(jsonCC?.message || 'Thêm chấm công thất bại')
@@ -490,10 +486,6 @@ watch(() => props.visible, val => { if (!val) resetForm() })
   font-size: 13px; color: #9a3412; font-weight: 600; text-align: center;
 }
 .popup-form__actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px; }
-.popup-form__btn { border: none; border-radius: 999px; padding: 9px 20px; font-size: 13px; font-weight: 700; cursor: pointer; }
-.popup-form__btn--cancel { background: #eee; color: #333; }
-.popup-form__btn--save   { background: #8f0000; color: #fff; }
-.popup-form__btn:disabled { opacity: .65; cursor: not-allowed; }
 
 @media (max-width: 640px) {
   .popup-card { max-width: 100%; }

@@ -2,6 +2,7 @@
 import { computed, ref, onMounted, watch } from 'vue'
 import { API_ENDPOINTS } from '../config/api'
 import '../styles/loading.css'
+import HeaderQuayLai from '../components/common/HeaderQuayLai.vue'
 
 interface AdvanceItem {
   id?: string
@@ -184,16 +185,7 @@ const displayTitleText = computed(() => {
 
 <template>
   <div class="schedule-page">
-    <header class="schedule-page__header">
-      <div class="schedule-page__inner header-content">
-        <button class="back-btn" type="button" @click="goBack" aria-label="Quay lại">
-          <svg class="back-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="15 18 9 12 15 6"></polyline>
-          </svg>
-        </button>
-        <span class="header-title">Lịch sử ứng tiền nhân sự</span>
-      </div>
-    </header>
+    <HeaderQuayLai title="Lịch sử tiền ứng nhân sự" />
 
     <section class="schedule-page__content">
       <div class="table-card">
