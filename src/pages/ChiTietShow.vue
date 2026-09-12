@@ -89,9 +89,10 @@
               <template v-if="isAdmin">
                 <template v-if="!isEditing">
                   <div class="status-dropdown-wrapper" ref="statusDropdownRef">
-                    <button type="button" class="footer-btn footer-btn--outline" :disabled="savingStatus || isSavingGlobal" @click.stop="toggleStatusMenu">
-                      Đổi trạng thái
-                    </button>
+                    <ButtonDoiTrangThai
+                      :disabled="savingStatus || isSavingGlobal"
+                      @click="toggleStatusMenu"
+                    />
                     <div v-if="showStatusMenu" class="status-menu">
                       <button v-for="st in availableStatuses" :key="st" type="button"
                         class="status-menu__item" :class="statusMenuItemClass(st)" @click="selectStatus(st)">
@@ -100,7 +101,7 @@
                     </div>
                   </div>
                   
-                  <button v-if="!isDaDienPendingSave" type="button" class="footer-btn footer-btn--primary" @click="enableEdit">Cập nhật</button>
+                  <ButtonCapNhat v-if="!isDaDienPendingSave" @click="enableEdit" />
                 </template>
                 <template v-else>
                   <button type="button" class="footer-btn footer-btn--outline" :disabled="isSavingGlobal" @click="handleCancelEdit">Hủy</button>
@@ -135,6 +136,8 @@ import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { API_ENDPOINTS } from '../config/api'
 import ShowStaffSection from '../pages/FormNhanSuTheoShow.vue'
+import ButtonDoiTrangThai from '../components/common/ButtonDoiTrangThai.vue'
+import ButtonCapNhat from "../components/common/ButtonCapNhat.vue";
 
 type ShowDetail = {
   ma_show: string; ten_show: string; ma_loai_show: string

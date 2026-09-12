@@ -12,48 +12,40 @@
     <HeaderTitle title="Danh sách tất cả show diễn" />
 
     <section class="schedule-page__content">
-      <!-- THANH CÔNG CỤ TÌM KIẾM (CỐ ĐỊNH KHI LƯỚT XUỐNG) -->
-      <div class="filter-bar-text">
-        <div class="filter-row-single">
-          <!-- 1. Ô Lọc Trạng Thái -->
-          <div class="filter-text-item">
-            <span class="filter-icon">📌</span>
-            <select v-model="searchForm.trang_thai" class="filter-text-select">
-              <option value="all">Tất cả</option>
-              <option value="chưa diễn">Chưa diễn</option>
-              <option value="đã diễn">Đã diễn</option>  
-              <option value="đã hủy">Đã hủy</option>
-            </select>
-          </div>
+      <!-- THANH CÔNG CỤ TÌM KIẾM TRÔI THEO TRANG VÀ NẰM DÍNH TRỰC TIẾP TRÊN NỀN -->
+      <div class="filter-row-single">
 
-          <!-- 2. Ô Sắp Xếp Ngày Diễn -->
-          <button class="sort-toggle-btn" type="button" @click="toggleSortOrder">
-            <svg class="sort-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 5v14M12 19l-4-4M12 19l4-4" />
-              <template v-if="searchForm.sortOrder === 'desc'">
-                <line x1="16" y1="6" x2="21" y2="6" />
-                <line x1="16" y1="9.5" x2="20" y2="9.5" />
-                <line x1="16" y1="13" x2="19" y2="13" />
-                <line x1="16" y1="16.5" x2="18" y2="16.5" />
-              </template>
-              <template v-else>
-                <line x1="16" y1="6" x2="18" y2="6" />
-                <line x1="16" y1="9.5" x2="20" y2="9.5" />
-                <line x1="16" y1="13" x2="19" y2="13" />
-                <line x1="16" y1="16.5" x2="18" y2="16.5" />
-              </template>
-            </svg>
-            <span class="sort-label">{{ searchForm.sortOrder === 'desc' ? 'Mới nhất' : 'Cũ nhất' }}</span>
-          </button>
-
-          <!-- 3. Ô Tìm Kiếm Linh Hoạt Dùng Component Chung -->
-          <div class="search-component-wrap" style="grid-column: span 2;">
-            <ThanhTimKiem
-              v-model:keyword="searchForm.keyword"
-              placeholder="Tìm tên show, khách, ngày, địa điểm..."
-            />
-          </div>
+      <!-- 3. Ô Tìm Kiếm Linh Hoạt Dùng Component Chung -->
+        <div class="search-component-wrap" style="grid-column: span 2;">
+          <ThanhTimKiem
+            v-model:keyword="searchForm.keyword"
+            placeholder="Tìm tên show, khách, ngày, địa điểm..."
+          />
         </div>
+        <!-- 1. Ô Lọc Trạng Thái Dùng Component Chung -->
+        <ButtonLocTheoTrangThai v-model="searchForm.trang_thai" />
+
+        <!-- 2. Ô Sắp Xếp Ngày Diễn -->
+        <button class="sort-toggle-btn" type="button" @click="toggleSortOrder">
+          <svg class="sort-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 5v14M12 19l-4-4M12 19l4-4" />
+            <template v-if="searchForm.sortOrder === 'desc'">
+              <line x1="16" y1="6" x2="21" y2="6" />
+              <line x1="16" y1="9.5" x2="20" y2="9.5" />
+              <line x1="16" y1="13" x2="19" y2="13" />
+              <line x1="16" y1="16.5" x2="18" y2="16.5" />
+            </template>
+            <template v-else>
+              <line x1="16" y1="6" x2="18" y2="6" />
+              <line x1="16" y1="9.5" x2="20" y2="9.5" />
+              <line x1="16" y1="13" x2="19" y2="13" />
+              <line x1="16" y1="16.5" x2="18" y2="16.5" />
+            </template>
+          </svg>
+          <span class="sort-label">{{ searchForm.sortOrder === 'desc' ? 'Mới nhất' : 'Cũ nhất' }}</span>
+        </button>
+
+        
       </div>
 
       <!-- SKELETON LOADING -->
@@ -82,8 +74,10 @@
             class="schedule-card"
             :class="`schedule-card--${item.statusClass}`"
           >
+            <!-- DÒNG TRÊN CÙNG: TÊN SHOW VÀ TAG TRẠNG THÁI -->
             <div class="schedule-card__top">
               <div class="schedule-card__name">{{ item.name }}</div>
+              
               <div class="schedule-card__tag" :class="`schedule-card__tag--${item.statusClass}`">
                 {{ item.status }}
               </div>
@@ -109,21 +103,21 @@
                 <span class="schedule-card__value">{{ item.phone }}</span>
               </div>
 
+              <!-- KHU VỰC NÚT THAO TÁC -->
               <div class="schedule-card__actions">
-                <!-- NÚT ĐĂNG KÝ SHOW FANCY XANH LÁ: CHỈ HIỆN KHI TRẠNG THÁI LÀ "CHƯA DIỄN" -->
                 <ButtonDangKyShow
                   v-if="item.status.trim().toLowerCase() === 'chưa diễn'"
                   :disabled="submitting"
                   @click.stop="registerShow(item)"
                 />
 
-                <!-- SỬ DỤNG COMPONENT BUTTON CHI TIẾT -->
                 <ButtonChiTiet :show-id="item.id" />
 
                 <div v-if="isAdmin" class="dropdown-wrap">
-                  <button class="btn btn--gray" type="button" :disabled="submitting" @click.stop="toggleDropdown(item.id)">
-                    Đổi trạng thái
-                  </button>
+                  <ButtonDoiTrangThai 
+                    :disabled="submitting" 
+                    @click.stop="toggleDropdown(item.id)" 
+                  />
                   <div v-if="openDropdownId === item.id" class="status-dropdown" @click.stop>
                     <button class="status-option status-option--done" type="button" @click="changeStatus(item, 'đã diễn')">
                       đã diễn
@@ -141,9 +135,11 @@
                   </div>
                 </div>
 
-                <button v-if="isAdmin" class="btn btn--blue" type="button" :disabled="submitting" @click.stop="openEditForm(item)">
-                  Cập nhật
-                </button>
+                <ButtonCapNhat 
+                  v-if="isAdmin"
+                  :disabled="submitting" 
+                  @click.stop="openEditForm(item)" 
+                />
               </div>
             </div>
           </article>
@@ -253,8 +249,11 @@ import { API_ENDPOINTS } from '../config/api'
 import { getUserField } from '../utils/auth'
 import HeaderTitle from '../components/common/HeaderQuayLai.vue'
 import ButtonChiTiet from '../components/common/ButtonChiTiet.vue'
+import ButtonDoiTrangThai from '../components/common/ButtonDoiTrangThai.vue'
 import ButtonDangKyShow from '../components/common/ButtonDangKyShow.vue'
+import ButtonCapNhat from '../components/common/ButtonCapNhat.vue'
 import ThanhTimKiem from '../components/common/ThanhTimKiem.vue'
+import ButtonLocTheoTrangThai from '../components/common/ButtonLocTheoTrangThai.vue'
 
 type Schedule = {
   id: string | number
@@ -652,25 +651,14 @@ onMounted(() => {
 .fade-enter-active, .fade-leave-active { transition: opacity 0.25s ease; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
 
-/* CÔNG CỤ TÌM KIẾM CỐ ĐỊNH KHI LƯỚT XUỐNG */
-.filter-bar-text {
-  max-width: 760px;
-  margin: 0 auto 12px;
-  padding: 6px 10px;
-  background: #ffffff;
-  border: 1px solid #f1f5f9;
-  border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
-  position: sticky;
-  top: 44px;
-  z-index: 9;
-}
-
+/* HÀNG CÔNG CỤ TÌM KIẾM DÍNH TRỰC TIẾP LÊN NỀN VÀ TRÔI THEO KHI CUỘN TRANG */
 .filter-row-single {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 6px;
+  gap: 8px;
   align-items: center;
+  max-width: 760px;
+  margin: 0 auto 12px;
   width: 100%;
 }
 
@@ -680,25 +668,28 @@ onMounted(() => {
   width: 100%;
 }
 
-/* Nút sắp xếp */
+/* Nút sắp xếp: Nền trắng tinh + Không viền đồng bộ với ButtonLocTheoTrangThai */
 .sort-toggle-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 3px;
-  background: transparent;
-  border: none;
+  gap: 4px;
+  background: #ffffff; /* Nền trắng tinh */
+  border: none;       /* Bỏ viền hoàn toàn */
+  border-radius: 6px;
+  padding: 4px 6px;
   cursor: pointer;
-  padding: 0;
   color: #475569;
   font-size: 12px;
   font-weight: 500;
   white-space: nowrap;
+  height: 100%;
+  box-sizing: border-box;
 }
 
 .sort-icon {
-  width: 14px;
-  height: 14px;
+  width: 13px;
+  height: 13px;
   stroke: #475569;
   flex-shrink: 0;
 }
@@ -706,39 +697,7 @@ onMounted(() => {
 .sort-label {
   font-size: 12px;
   color: #475569;
-  font-weight: 500;
-}
-
-/* Ô Lọc Trạng Thái */
-.filter-text-item {
-  display: flex;
-  align-items: center;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  padding: 4px 6px;
-  min-width: 0;
-}
-
-.filter-icon {
-  font-size: 11px;
-  margin-right: 4px;
-  flex-shrink: 0;
-  color: #475569;
-}
-
-.filter-text-select {
-  border: none;
-  outline: none;
-  background: transparent;
-  font-size: 12px;
-  color: #475569;
-  font-weight: 500;
-  cursor: pointer;
-  padding: 0;
-  width: 100%;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  font-weight: 600;
 }
 
 .state-message         { text-align: center; padding: 24px 15px; font-weight: 700; color: #8f0000; font-size: 14px; }
@@ -768,7 +727,15 @@ onMounted(() => {
 .schedule-card--expired    { border-left-color: #6b7280; }
 .schedule-card--default    { border-left-color: #9ca3af; }
 
-.schedule-card__top  { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+/* KHU VỰC TOP SHOW CARD */
+.schedule-card__top  { 
+  display: flex; 
+  align-items: center; 
+  justify-content: space-between; 
+  gap: 8px; 
+  margin-bottom: 6px; 
+}
+
 .schedule-card__name { font-size: 15px; font-weight: 800; color: #8f0000; line-height: 1.3; }
 .schedule-card__tag  { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
 .schedule-card__tag--played     { color: #15803d; background: #ecfdf3; }
@@ -782,7 +749,16 @@ onMounted(() => {
 .schedule-card__key      { font-weight: 700; color: #8f0000; }
 .schedule-card__key--inline { margin-left: 8px; }
 .schedule-card__value   { font-weight: 500; color: #334155; }
-.schedule-card__actions { margin-top: 6px; display: flex; justify-content: flex-end; gap: 8px; align-items: center; }
+
+/* CỤM NÚT THAO TÁC */
+.schedule-card__actions { 
+  margin-top: 8px;
+  display: flex; 
+  flex-wrap: wrap;
+  justify-content: flex-end; 
+  gap: 8px; 
+  align-items: center; 
+}
 
 /* SKELETON ANIMATION */
 .skeleton-card { border-left-color: #cbd5e1; height: 110px; display: flex; flex-direction: column; justify-content: center; gap: 8px; }
@@ -793,14 +769,17 @@ onMounted(() => {
 @keyframes skeleton-loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
 /* NÚT BẤM VÀ DROPDOWN TRẠNG THÁI */
-.btn { border: none; border-radius: 999px; padding: 6px 14px; color: #fff; font-size: 12px; font-weight: 600; cursor: pointer; transition: opacity .15s; }
+.btn { border: none; border-radius: 999px; padding: 6px 14px; color: #fff; font-size: 12px; font-weight: 600; cursor: pointer; transition: opacity .15s; white-space: nowrap; }
 .btn:disabled { opacity: .4; cursor: not-allowed; }
 .btn--red   { background: #8f0000; } .btn--red:hover:not(:disabled)   { background: #a50000; }
 .btn--gray  { background: #475569; } .btn--gray:hover:not(:disabled)  { background: #334155; }
-.btn--green { background: #16a34a; } .btn--green:hover:not(:disabled) { background: #15803d; }
-.btn--blue  { background: #2563eb; } .btn--blue:hover:not(:disabled)  { background: #1d4ed8; }
 
-.dropdown-wrap { position: relative; }
+.dropdown-wrap { 
+  position: relative; 
+  display: inline-flex; 
+  align-items: center; 
+}
+
 .status-dropdown { position: absolute; bottom: calc(100% + 6px); right: 0; background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 6px; box-shadow: 0 8px 24px rgba(0,0,0,.14); min-width: 140px; z-index: 100; display: flex; flex-direction: column; gap: 3px; }
 .status-option { border: none; border-radius: 6px; padding: 6px 10px; font-size: 12px; font-weight: 600; cursor: pointer; text-align: left; background: transparent; color: #1e293b; transition: background .12s; }
 .status-option:hover          { background: #f1f5f9; }
@@ -838,7 +817,7 @@ onMounted(() => {
 
 /* RESPONSIVE LAYOUT */
 @media (max-width: 639px) {
-  .filter-text-select, .sort-label { font-size: 11px; }
+  .sort-label { font-size: 11px; }
   .schedule-card { padding: 10px 12px; }
   .schedule-card__name { font-size: 14px; }
   .schedule-card__line { font-size: 11px; }

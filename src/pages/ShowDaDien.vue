@@ -21,9 +21,14 @@
     </header>
 
     <section class="schedule-page__content">
-      <!-- THANH CÔNG CỤ TÌM KIẾM (CỐ ĐỊNH KHI LƯỚT XUỐNG - CĂN PHẢI) -->
+      <!-- THANH CÔNG CỤ TÌM KIẾM (IN HẲN VÀO NỀN TRẮNG) -->
       <div class="filter-bar-text">
-        <div class="filter-row-right">
+        <div class="filter-row-left">
+          <!-- 2. Ô Tìm Kiếm Dùng Component Chung -->
+          <ThanhTimKiem
+            v-model:keyword="searchForm.keyword"
+            placeholder="Tìm tên, ngày, khách..."
+          />
           <!-- 1. Ô Sắp Xếp Ngày Diễn -->
           <button class="sort-toggle-btn" type="button" @click="toggleSortOrder">
             <svg class="sort-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -43,12 +48,6 @@
             </svg>
             <span class="sort-label">{{ searchForm.sortOrder === 'asc' ? 'Gần nhất' : 'Xa nhất' }}</span>
           </button>
-
-          <!-- 2. Ô Tìm Kiếm Dùng Component Chung -->
-          <ThanhTimKiem
-            v-model:keyword="searchForm.keyword"
-            placeholder="Tìm tên, ngày, khách..."
-          />
         </div>
       </div>
 
@@ -513,8 +512,7 @@ onUnmounted(() => {
   padding: 10px 14px; 
   border-bottom: none;
   box-shadow: none;
-  position: sticky;
-  top: 0;
+  position: relative; 
   z-index: 10;
 }
 
@@ -592,23 +590,19 @@ onUnmounted(() => {
 .fade-enter-active, .fade-leave-active { transition: opacity 0.25s ease; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
 
-/* CÔNG CỤ TÌM KIẾM CỐ ĐỊNH KHI LƯỚT XUỐNG - CĂN PHẢI */
+/* CÔNG CỤ TÌM KIẾM VÀ LỌC IN HẲN VÀO NỀN TRẮNG */
 .filter-bar-text {
   max-width: 760px;
   margin: 0 auto 12px;
-  padding: 6px 10px;
-  background: #ffffff;
-  border: 1px solid #f1f5f9;
-  border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
-  position: sticky;
-  top: 44px;
-  z-index: 9;
+  padding: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  position: relative; 
 }
-
-.filter-row-right {
+.filter-row-left {
   display: flex;
-  justify-content: flex-end;
+  justify-content: flex-start;
   align-items: center;
   gap: 10px;
   width: 100%;

@@ -12,35 +12,34 @@
     <HeaderTitle title="Danh sách các show sắp tới" />
 
     <section class="schedule-page__content">
-      <!-- THANH CÔNG CỤ TÌM KIẾM (CỐ ĐỊNH KHI LƯỚT XUỐNG - CĂN PHẢI) -->
-      <div class="filter-bar-text">
-        <div class="filter-row-right">
-          <!-- 1. Ô Sắp Xếp Ngày Diễn -->
-          <button class="sort-toggle-btn" type="button" @click="toggleSortOrder">
-            <svg class="sort-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 5v14M12 19l-4-4M12 19l4-4" />
-              <template v-if="searchForm.sortOrder === 'asc'">
-                <line x1="16" y1="6" x2="18" y2="6" />
-                <line x1="16" y1="9.5" x2="19" y2="9.5" />
-                <line x1="16" y1="13" x2="20" y2="13" />
-                <line x1="16" y1="16.5" x2="21" y2="16.5" />
-              </template>
-              <template v-else>
-                <line x1="16" y1="6" x2="21" y2="6" />
-                <line x1="16" y1="9.5" x2="20" y2="9.5" />
-                <line x1="16" y1="13" x2="19" y2="13" />
-                <line x1="16" y1="16.5" x2="18" y2="16.5" />
-              </template>
-            </svg>
-            <span class="sort-label">{{ searchForm.sortOrder === 'asc' ? 'Gần nhất' : 'Xa nhất' }}</span>
-          </button>
-
-          <!-- 2. Ô Tìm Kiếm (Dùng Component ThanhTimKiem.vue) -->
+      <!-- THANH CÔNG CỤ TÌM KIẾM & LỌC CĂN TRÁI TUYỆT ĐỐI -->
+      <div class="filter-row-single">
+        <!-- 2. Ô Tìm Kiếm Linh Hoạt Dùng Component ThanhTimKiem -->
+        <div class="search-component-wrap">
           <ThanhTimKiem
             v-model:keyword="searchForm.keyword"
             placeholder="Tìm tên, ngày, khách, địa điểm, SĐT..."
           />
         </div>
+        <!-- 1. Ô Sắp Xếp Ngày Diễn -->
+        <button class="sort-toggle-btn" type="button" @click="toggleSortOrder">
+          <svg class="sort-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 5v14M12 19l-4-4M12 19l4-4" />
+            <template v-if="searchForm.sortOrder === 'asc'">
+              <line x1="16" y1="6" x2="18" y2="6" />
+              <line x1="16" y1="9.5" x2="19" y2="9.5" />
+              <line x1="16" y1="13" x2="20" y2="13" />
+              <line x1="16" y1="16.5" x2="21" y2="16.5" />
+            </template>
+            <template v-else>
+              <line x1="16" y1="6" x2="21" y2="6" />
+              <line x1="16" y1="9.5" x2="20" y2="9.5" />
+              <line x1="16" y1="13" x2="19" y2="13" />
+              <line x1="16" y1="16.5" x2="18" y2="16.5" />
+            </template>
+          </svg>
+          <span class="sort-label">{{ searchForm.sortOrder === 'asc' ? 'Gần nhất' : 'Xa nhất' }}</span>
+        </button>
       </div>
 
       <!-- SKELETON LOADING -->
@@ -145,7 +144,7 @@
                   <span v-if="gioError" class="edit-error">Phải đúng dạng HH:MM</span>
                 </div>
               </div>
-              
+
               <div class="edit-field">
                 <label class="edit-label">Địa điểm</label>
                 <input class="edit-input" v-model="editForm.diachi" type="text" placeholder="Địa điểm" />
@@ -500,7 +499,13 @@ onUnmounted(() => {
   position: relative; 
 }
 
-.schedule-page__content { padding: 6px 12px 40px; }
+.schedule-page__content { 
+  padding: 6px 12px 40px; 
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start; /* Ép toàn bộ khung nội dung bám lề trái */
+  width: 100%;
+}
 
 /* LOADING OVERLAY KHÓA TOÀN BỘ MÀN HÌNH */
 .loading-overlay {
@@ -532,47 +537,45 @@ onUnmounted(() => {
 .fade-enter-active, .fade-leave-active { transition: opacity 0.25s ease; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
 
-/* CÔNG CỤ TÌM KIẾM CỐ ĐỊNH KHI LƯỚT XUỐNG - CĂN PHẢI */
-.filter-bar-text {
-  max-width: 760px;
-  margin: 0 auto 12px;
-  padding: 6px 10px;
-  background: #ffffff;
-  border: 1px solid #f1f5f9;
-  border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
-  position: sticky;
-  top: 44px;
-  z-index: 9;
-}
-
-.filter-row-right {
-  display: flex;
-  justify-content: flex-end;
+/* DỒN DẠT CẢ 2 VỀ TRÁI VÀ DỒN SÁT NHAU */
+.filter-row-single {
+  display: flex !important;
+  justify-content: flex-start !important;
   align-items: center;
-  gap: 10px;
+  gap: 0px; /* Khoảng cách giữa ô tìm kiếm và nút sắp xếp */
   width: 100%;
+  margin: 0 0 15px 0 !important;
 }
 
-/* Nút sắp xếp */
+.search-component-wrap {
+  display: flex;
+  align-items: center;
+  width: 200px !important; /* Cố định độ rộng gọn gàng cho ô tìm kiếm */
+  flex: none !important; /* Cấm không cho dãn ra để đẩy nút sang phải */
+}
+
+/* Nút sắp xếp: Nền trắng tinh + Không viền đồng bộ */
 .sort-toggle-btn {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 4px;
-  background: transparent;
+  background: #ffffff;
   border: none;
-  cursor: pointer;
+  border-radius: 6px;
   padding: 4px 6px;
+  cursor: pointer;
   color: #475569;
   font-size: 12px;
   font-weight: 500;
   white-space: nowrap;
+  box-sizing: border-box;
+  flex-shrink: 0;
 }
 
 .sort-icon {
-  width: 15px;
-  height: 15px;
+  width: 13px;
+  height: 13px;
   stroke: #475569;
   flex-shrink: 0;
 }
@@ -580,22 +583,21 @@ onUnmounted(() => {
 .sort-label {
   font-size: 12px;
   color: #475569;
-  font-weight: 500;
+  font-weight: 600;
 }
 
-.state-message         { text-align: center; padding: 24px 15px; font-weight: 700; color: #8f0000; font-size: 14px; }
+.state-message         { text-align: center; padding: 24px 15px; font-weight: 700; color: #8f0000; font-size: 14px; width: 100%; }
 .state-message--error { color: #dc2626; }
 
-/* TĂNG GAP VÀ TẠO KHOẢNG CÁCH RỘNG GIỮA CÁC THẺ SHOW */
+/* DANH SÁCH SHOW VÀ THẺ SHOW CARD DỄ NHÌN */
 .schedule-list { 
   max-width: 760px; 
-  margin: 0 auto; 
+  width: 100%;
   display: flex; 
   flex-direction: column; 
   gap: 12px; 
 }
 
-/* THẺ SHOW CARD RỘNG RÃI & RÕ RÀNG */
 .schedule-card { 
   background: #fff; 
   border-radius: 10px; 
@@ -635,7 +637,7 @@ onUnmounted(() => {
 .skeleton-text.short { width: 35%; }
 @keyframes skeleton-loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
-/* NÚT BẤM TO VÀ DỄ BẤM HƠN */
+/* NÚT BẤM VÀ THAO TÁC */
 .btn { border: none; border-radius: 999px; padding: 6px 14px; color: #fff; font-size: 12px; font-weight: 600; cursor: pointer; transition: opacity .15s; }
 .btn:disabled { opacity: .4; cursor: not-allowed; }
 .btn--red   { background: #8f0000; } .btn--red:hover:not(:disabled)   { background: #a50000; }

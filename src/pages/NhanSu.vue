@@ -17,24 +17,16 @@
       </transition-group>
     </div>
 
-    <!-- HEADER -->
-    <header class="nhansu-page__header">
-      <div class="nhansu-page__inner header-content">
-        <button class="back-btn" type="button" @click="goBack" aria-label="Quay lại">
-          <svg class="back-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="15 18 9 12 15 6"></polyline>
-          </svg>
-        </button>
-        <span class="header-title">DANH SÁCH NHÂN SỰ</span>
-
-        <button class="add-btn" type="button" @click="openAddModal" aria-label="Thêm nhân sự">
-          <svg class="add-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="12" y1="5" x2="12" y2="19"></line>
-            <line x1="5" y1="12" x2="19" y2="12"></line>
-          </svg>
-        </button>
-      </div>
-    </header>
+    <!-- HEADER: SỬ DỤNG COMPONENT CHUNG -->
+    <div class="header-wrapper">
+      <HeaderQuayLai title="DANH SÁCH NHÂN SỰ" />
+      <button class="add-btn" type="button" @click="openAddModal" aria-label="Thêm nhân sự">
+        <svg class="add-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+      </button>
+    </div>
 
     <section class="nhansu-page__content">
       <div v-if="loading" class="state-msg">Đang tải dữ liệu nhân sự...</div>
@@ -220,9 +212,9 @@
 
 <script setup lang="ts">
 import { onMounted, ref, reactive } from 'vue'
-import { useRouter } from 'vue-router'
 import { API_ENDPOINTS } from '../config/api'
 import defaultAvatar from '../assets/lan.webp'
+import HeaderQuayLai from '../components/common/HeaderQuayLai.vue'
 
 type StaffItem = {
   ma_ns: string
@@ -244,7 +236,6 @@ type ToastItem = {
   type: 'success' | 'error'
 }
 
-const router = useRouter()
 const loading = ref(false)
 const submitting = ref(false)
 const error = ref('')
@@ -308,14 +299,6 @@ const resetForm = () => {
   formData.quyen = 'XEM'
   formData.ghi_chu = ''
   passwordError.value = ''
-}
-
-const goBack = () => {
-  if (window.history.length > 1) {
-    router.back()
-  } else {
-    router.push('/')
-  }
 }
 
 const safeFetch = async (url: string) => {
@@ -426,7 +409,6 @@ const handleSubmitForm = async () => {
       ghi_chu: String(formData.ghi_chu || '').trim()
     }
 
-    // Sử dụng ép kiểu 'as any' tại đây để tránh xung đột Type với API_ENDPOINTS
     const url = isEditMode.value
       ? API_ENDPOINTS.CAP_NHAT_NHAN_SU_ADMIN(payload as any)
       : API_ENDPOINTS.THEM_NHAN_SU(payload as any)
@@ -467,6 +449,39 @@ onMounted(fetchStaff)
 <style scoped>
 .nhansu-page { min-height: 100vh; background: #ffffff; padding-bottom: 30px; position: relative; }
 
+/* WRAPPER BỌC HEADER VÀ NÚT THÊM MỚI */
+.header-wrapper {
+  position: relative;
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.add-btn {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 50%;
+  transition: background-color 0.2s ease;
+  z-index: 11;
+}
+
+.add-btn:hover { background-color: #f1f5f9; }
+
+.add-icon {
+  width: 22px;
+  height: 22px;
+  stroke: #8f0000;
+  flex-shrink: 0;
+}
+
 .toast-container {
   position: fixed;
   top: 16px;
@@ -500,55 +515,6 @@ onMounted(fetchStaff)
 .toast-enter-active, .toast-leave-active { transition: all 0.3s ease; }
 .toast-enter-from { opacity: 0; transform: translateX(50px); }
 .toast-leave-to { opacity: 0; transform: translateY(-20px); }
-
-.nhansu-page__header { 
-  background: #ffffff; 
-  padding: 10px 14px; 
-  border-bottom: none;
-  box-shadow: none;
-  flex-shrink: 0;
-  z-index: 10;
-}
-
-.nhansu-page__inner { max-width: 760px; margin: 0 auto; }
-
-.header-content {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.back-btn, .add-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  padding: 4px;
-  border-radius: 50%;
-  transition: background-color 0.2s ease;
-}
-
-.back-btn:hover, .add-btn:hover { background-color: #f1f5f9; }
-
-.back-icon, .add-icon {
-  width: 22px;
-  height: 22px;
-  stroke: #8f0000;
-  flex-shrink: 0;
-}
-
-.header-title {
-  font-size: 16px;
-  font-weight: 700;
-  color: #8f0000;
-  user-select: none;
-  flex-grow: 1;
-  text-align: left;
-  margin-left: 4px;
-}
 
 .nhansu-page__content { max-width: 600px; margin: 0 auto; padding: 12px; }
 
