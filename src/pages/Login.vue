@@ -1,8 +1,8 @@
 <template>
   <div class="login-wrapper">
     <!-- Lớp ảnh nền xử lý mờ (blur) -->
-    <div 
-      class="login__bg" 
+    <div
+      class="login__bg"
       :style="{ backgroundImage: `url(${bgImage})` }"
     ></div>
 
@@ -55,11 +55,64 @@ import logo from '../assets/logo 2008.jpg'
 import bgImage from '../assets/nenlogin.jpg'
 import { API_ENDPOINTS } from '../config/api'
 
+type PersonnelStorage = {
+  ma_ns: string
+  ten_ns: string
+  nam_sinh: number | string
+  dia_chi: string
+  sdt: string
+  anh_daidien: string
+  vai_tro: string
+  quyen: string
+  ghi_chu: string
+}
+
 const router = useRouter()
 const username = ref('')
 const password = ref('')
 const loading = ref(false)
 const errorMsg = ref('')
+
+const savePersonnelToLocalStorage = (rawData: any) => {
+  const data = rawData && typeof rawData === 'object' ? rawData : {}
+
+  const record: PersonnelStorage = {
+    ma_ns: data.ma_ns !== undefined && data.ma_ns !== null ? String(data.ma_ns) : '',
+    ten_ns: data.ten_ns !== undefined && data.ten_ns !== null ? String(data.ten_ns) : '',
+    nam_sinh:
+      data.nam_sinh !== undefined && data.nam_sinh !== null && data.nam_sinh !== ''
+        ? Number.isNaN(Number(data.nam_sinh))
+          ? String(data.nam_sinh)
+          : Number(data.nam_sinh)
+        : '',
+    dia_chi: data.dia_chi !== undefined && data.dia_chi !== null ? String(data.dia_chi) : '',
+    sdt: data.sdt !== undefined && data.sdt !== null ? String(data.sdt) : '',
+    anh_daidien:
+      data.anh_daidien !== undefined && data.anh_daidien !== null
+        ? String(data.anh_daidien)
+        : '',
+    vai_tro: data.vai_tro !== undefined && data.vai_tro !== null ? String(data.vai_tro) : '',
+    quyen: data.quyen !== undefined && data.quyen !== null ? String(data.quyen) : '',
+    ghi_chu: data.ghi_chu !== undefined && data.ghi_chu !== null ? String(data.ghi_chu) : '',
+  }
+
+  // Xóa các key cũ không cần dùng nếu từng tồn tại
+  localStorage.removeItem('token')
+  localStorage.removeItem('user')
+  localStorage.removeItem('user_info')
+  localStorage.removeItem('tai_khoan')
+
+  // Lưu đúng các trường của nhân sự vào localStorage
+  localStorage.setItem('ma_ns', record.ma_ns)
+  localStorage.setItem('ten_ns', record.ten_ns)
+  localStorage.setItem('nam_sinh', String(record.nam_sinh))
+  localStorage.setItem('dia_chi', record.dia_chi)
+  localStorage.setItem('sdt', record.sdt)
+  localStorage.setItem('anh_daidien', record.anh_daidien)
+  localStorage.setItem('vai_tro', record.vai_tro)
+  localStorage.setItem('quyen', record.quyen)
+  localStorage.setItem('ghi_chu', record.ghi_chu)
+}
 
 const handleLogin = async () => {
   if (loading.value) return
@@ -81,18 +134,14 @@ const handleLogin = async () => {
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
 
     const json = await res.json()
-    const ok = json?.code === 200 || json?.status === 'success'
+    const ok = json?.code === 200 || json?.status === 'success' || json?.success === true
 
     if (!ok) {
       errorMsg.value = json?.message || 'Đăng nhập thất bại'
       return
     }
 
-    localStorage.setItem('token', 'logged_in')
-    localStorage.setItem('user', JSON.stringify(json?.data || {}))
-    localStorage.setItem('tai_khoan', String(json?.data?.tai_khoan || ''))
-    localStorage.setItem('vai_tro', String(json?.data?.vai_tro || ''))
-    localStorage.setItem('quyen', String(json?.data?.quyen || ''))
+    savePersonnelToLocalStorage(json?.data)
 
     await router.push('/home')
   } catch (err: any) {
@@ -123,8 +172,8 @@ const handleLogin = async () => {
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  filter: blur(2px); /* Chỉnh độ mờ nhòe ảnh nền tại đây (6px, 8px, 12px) */
-  transform: scale(1.05); /* Tránh viền trắng xung quanh do filter blur */
+  filter: blur(2px);
+  transform: scale(1.05);
   z-index: 0;
 }
 
@@ -133,8 +182,8 @@ const handleLogin = async () => {
   position: relative;
   z-index: 1;
   width: 100%;
-  max-width: 380px;   
-  background: rgba(0, 0, 0, 0.25); /* Nền mỏng xuyên thấu */
+  max-width: 380px;
+  background: rgba(0, 0, 0, 0.25);
   border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 18px;
   padding: 22px 18px 18px;

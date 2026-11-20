@@ -1,43 +1,49 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
 
-import Login         from '../pages/Login.vue'
-import MainLayout   from '../layouts/MainLayout.vue'
-import Home          from '../pages/Home.vue'
-import Dashboard     from '../pages/Dashboard.vue'
-import TatCaLichDien from '../pages/TatCaLichDien.vue'
-import ShowChuaDien  from '../pages/ShowChuaDien.vue'
-import ShowDaDien    from '../pages/ShowDaDien.vue'
-import ChiTietShow   from '../pages/ChiTietShow.vue'
-import ChamCong      from '../pages/ChamCong.vue'
-import NhanSu        from '../pages/NhanSu.vue'
-import TaiKhoan      from '../pages/TaiKhoan.vue'
-import TienUng       from '../pages/LichSuTienUng.vue'
+import SanPham         from '../pages/SanPham.vue'
+import MainLayout      from '../layouts/MainLayout.vue'
+import Home            from '../pages/Home.vue'
+import Dashboard       from '../pages/Dashboard.vue'
+import TatCaLichDien   from '../pages/TatCaLichDien.vue'
+import ShowChuaDien    from '../pages/ShowChuaDien.vue'
+import ShowDaDien      from '../pages/ShowDaDien.vue'
+import ChiTietShow     from '../pages/ChiTietShow.vue'
+import ChamCong        from '../pages/ChamCong.vue'
+import NhanSu          from '../pages/NhanSu.vue'
+import TaiKhoan        from '../pages/TaiKhoan.vue'
+import TienUng         from '../pages/LichSuTienUng.vue'
 import AddUngTienChoNS from '../pages/AddUngTienChoNS.vue'
+import Login           from '../pages/Login.vue'
 
 const DangKyShow = () => import('../pages/DangKyShow.vue')
 
 const routes: RouteRecordRaw[] = [
   {
     path: '/login',
-    name: 'login',
+    name: 'Login',
     component: Login,
+  },
+  {
+    path: '/SanPham',
+    name: 'sanpham',
+    component: SanPham,
   },
   {
     path: '/',
     component: MainLayout,
-    redirect: '/login',
+    redirect: '/SanPham',
     children: [
-      { path: 'home',                name: 'home',              component: Home },
-      { path: 'dashboard',           name: 'dashboard',         component: Dashboard },
-      { path: 'tat-ca-lich-dien',    name: 'TatCaLichDien',     component: TatCaLichDien },
-      { path: 'show-chua-dien',      name: 'ShowChuaDien',      component: ShowChuaDien },
-      { path: 'show-da-dien',        name: 'ShowDaDien',        component: ShowDaDien },
-      { path: 'cham-cong',           name: 'ChamCong',          component: ChamCong },
-      { path: 'tien-ung',            name: 'TienUng',           component: TienUng },
-      { path: 'add-ung-tien-cho-ns', name: 'AddUngTienChoNS',   component: AddUngTienChoNS },
-      { path: 'nhan-su',             name: 'NhanSu',            component: NhanSu },
-      { path: 'tai-khoan',           name: 'TaiKhoan',          component: TaiKhoan },
+      { path: 'home',                name: 'home',            component: Home },
+      { path: 'dashboard',           name: 'dashboard',       component: Dashboard },
+      { path: 'tat-ca-lich-dien',    name: 'TatCaLichDien',   component: TatCaLichDien },
+      { path: 'show-chua-dien',      name: 'ShowChuaDien',    component: ShowChuaDien },
+      { path: 'show-da-dien',        name: 'ShowDaDien',      component: ShowDaDien },
+      { path: 'cham-cong',           name: 'ChamCong',        component: ChamCong },
+      { path: 'tien-ung',            name: 'TienUng',         component: TienUng },
+      { path: 'add-ung-tien-cho-ns', name: 'AddUngTienChoNS', component: AddUngTienChoNS },
+      { path: 'nhan-su',             name: 'NhanSu',          component: NhanSu },
+      { path: 'tai-khoan',           name: 'TaiKhoan',        component: TaiKhoan },
       {
         path: 'chi-tiet-show/:id',
         name: 'ChiTietShow',

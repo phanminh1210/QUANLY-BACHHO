@@ -333,7 +333,7 @@ const submitEditInfo = async () => {
     const url = API_ENDPOINTS.CAPNHAT_THONGTIN_NHANSU_BY_NV({
       ma_ns:    info.value.ma_ns,
       ten_ns:   info.value.ten_ns,
-      nam_sinh: editForm.value.nam_sinh,
+      nam_sinh: editForm.value.nam_sinh, 
       dia_chi:  editForm.value.dia_chi,
       sdt:      editForm.value.sdt,
     })
