@@ -51,7 +51,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import logo from '../assets/logo 2008.jpg'
+import logo from '../assets/logo2008.jpg'
 import bgImage from '../assets/nenlogin.jpg'
 import { API_ENDPOINTS } from '../config/api'
 

@@ -1,3 +1,4 @@
+
 <template>
   <div class="product-page">
     <!-- TOP BAR -->
@@ -13,18 +14,10 @@
 
     <!-- BODY -->
     <section class="page-body">
-      <!-- Loading skeleton -->
-      <div v-if="loading" class="product-list">
-        <article v-for="n in 3" :key="n" class="product-row">
-          <div class="product-row__media skeleton-box"></div>
-          <div class="product-row__body">
-            <div class="skeleton-text skeleton-text--title"></div>
-            <div class="skeleton-text skeleton-text--medium"></div>
-          </div>
-        </article>
-      </div>
+      <!-- Loading -->
+      <IconLoading v-if="loading" />
 
-      <!-- Danh sách hàng (Mỗi hàng chia đôi 50/50: 50% Ảnh | 50% Tiêu đề & Nội dung) -->
+      <!-- Danh sách sản phẩm -->
       <div v-else-if="products.length > 0" class="product-list">
         <article
           v-for="(item, index) in products"
@@ -32,7 +25,6 @@
           class="product-row"
           @click="handleSelectProduct(item)"
         >
-          <!-- Phần 1: Nửa trái Ảnh -->
           <div class="product-row__media">
             <img
               :src="item.url"
@@ -42,7 +34,6 @@
             />
           </div>
 
-          <!-- Phần 2: Nửa phải Tiêu đề & Nội dung -->
           <div class="product-row__body">
             <h2 class="product-row__title">{{ item.tieu_de }}</h2>
             <p class="product-row__content">{{ item.noi_dung }}</p>
@@ -62,6 +53,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { GET_SAN_PHAM_API } from '../config/api'
+import IconLoading from '../components/IconLoading.vue'
 
 export type ProductItem = {
   id?: string | number
@@ -112,8 +104,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-@import '../styles/loading.css';
-
 .product-page {
   position: fixed;
   top: 0;
@@ -150,16 +140,16 @@ onMounted(() => {
 .galaxy-login-btn {
   padding: 9px 20px;
   border-radius: 999px;
-  border: 1px solid rgba(165, 243, 252, 0.5);
-  background: linear-gradient(135deg, #4c1d95 0%, #6d28d9 38%, #2563eb 75%, #06b6d4 100%);
+  border: 1px solid rgba(254, 202, 202, 0.6);
+  background: linear-gradient(135deg, #7f1d1d 0%, #dc2626 38%, #ef4444 75%, #f97316 100%);
   color: #ffffff;
   font-size: 13.5px;
   font-weight: 800;
   letter-spacing: 0.3px;
   cursor: pointer;
   box-shadow:
-    0 6px 20px rgba(37, 99, 235, 0.45),
-    0 0 16px rgba(139, 92, 246, 0.4),
+    0 6px 20px rgba(220, 38, 38, 0.45),
+    0 0 16px rgba(239, 68, 68, 0.4),
     inset 0 1px 1px rgba(255, 255, 255, 0.35);
 }
 
@@ -214,7 +204,6 @@ onMounted(() => {
   pointer-events: none;
 }
 
-/* Nửa trái: Ảnh chiếm 50% chiều ngang hàng */
 .product-row__media {
   position: relative;
   flex: 1 1 50%;
@@ -236,7 +225,6 @@ onMounted(() => {
   display: block;
 }
 
-/* Nửa phải: Chữ chiếm 50% chiều ngang hàng */
 .product-row__body {
   position: relative;
   z-index: 1;
@@ -284,42 +272,43 @@ onMounted(() => {
   border-radius: 14px;
 }
 
-.skeleton-box {
-  min-height: 192px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.07);
-}
-
 @media (max-width: 640px) {
   .page-topbar {
     padding: 12px 12px 2px;
   }
+
   .galaxy-login-btn {
     padding: 8px 16px;
     font-size: 12.5px;
   }
+
   .page-body {
     padding: 12px 12px 68px;
   }
+
   .product-list {
     gap: 16px;
   }
+
   .product-row {
     padding: 12px;
     gap: 12px;
     border-radius: 16px;
   }
-  .product-row__media,
-  .skeleton-box {
+
+  .product-row__media {
     min-height: 156px;
     border-radius: 10px;
   }
+
   .product-row__body {
     gap: 8px;
   }
+
   .product-row__title {
     font-size: 16px;
   }
+
   .product-row__content {
     font-size: 13.5px;
     line-height: 1.48;

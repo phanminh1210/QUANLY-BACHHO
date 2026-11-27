@@ -1,17 +1,19 @@
+
 <template>
   <div class="home-page">
-    <!-- HEADER THƯƠNG HIỆU & TÀI KHOẢN -->
     <header class="home-header">
       <p class="home-subtitle">Hệ thống quản lý lịch diễn & nhân sự Bạch Hổ Đường</p>
 
       <div class="home-header__brand">
         <img :src="logo" alt="Logo" class="home-header__logo" />
+
         <div class="home-header__info">
           <div class="home-header__user-sub">
             <span
               class="status-dot"
               :class="isLoggedIn ? 'status-dot--online' : 'status-dot--offline'"
             ></span>
+
             <span
               class="home-header__username"
               :class="{ 'home-header__username--clickable': !isLoggedIn }"
@@ -24,70 +26,28 @@
       </div>
     </header>
 
-    <!-- BODY (Tự động cuộn khi tràn nội dung, vừa khít thì đứng yên) -->
     <section class="home-bottom">
-      <!-- 1. LỊCH DIỄN SẮP TỚI (SHOW GẦN NHẤT) -->
-      <div class="section-title">📅 Lịch diễn sắp tới</div>
+      <div class="section-title">Show sắp tới</div>
 
       <div class="upcoming-list">
-        <article
-          v-for="item in (upcomingShows.length > 0 ? upcomingShows : [{} as ShowItem])"
-          :key="item.id || 'skeleton-show'"
-          class="schedule-card schedule-card--not-played"
-        >
-          <div class="schedule-card__top">
-            <div class="schedule-card__name">
-              <span v-if="loadingShows" class="skeleton-text skeleton-text--title"></span>
-              <template v-else>{{ item.name || 'Chưa có show sắp diễn' }}</template>
-            </div>
-            <div class="schedule-card__tag schedule-card__tag--not-played">
-              {{ item.status || 'Sắp diễn' }}
-            </div>
-          </div>
-          <div class="schedule-card__content">
-            <div class="schedule-card__line">
-              <span class="schedule-card__key">Ngày:</span>
-              <span class="schedule-card__value">
-                <span v-if="loadingShows" class="skeleton-text skeleton-text--short"></span>
-                <template v-else>{{ item.date || 'Chưa xếp' }}</template>
-              </span>
-              <span class="schedule-card__key schedule-card__key--inline">Giờ:</span>
-              <span class="schedule-card__value">
-                <span v-if="loadingShows" class="skeleton-text skeleton-text--short"></span>
-                <template v-else>{{ item.time || 'Chưa xếp' }}</template>
-              </span>
-            </div>
-            <div class="schedule-card__line">
-              <span class="schedule-card__key">Địa điểm:</span>
-              <span class="schedule-card__value">
-                <span v-if="loadingShows" class="skeleton-text skeleton-text--medium"></span>
-                <template v-else>{{ item.location || 'Chưa cập nhật' }}</template>
-              </span>
-            </div>
-            <div class="schedule-card__line">
-              <span class="schedule-card__key">SĐT:</span>
-              <span class="schedule-card__value">
-                <span v-if="loadingShows" class="skeleton-text skeleton-text--short"></span>
-                <template v-else>{{ item.phone || 'Chưa có' }}</template>
-              </span>
-            </div>
-            <!-- Thay thế bằng 2 Component Button Fancy -->
-            <div class="schedule-card__actions">
-              <ButtonDangKyShow_4
-                :show-id="item.id"
-                text="Đăng ký diễn"
-                :disabled="loadingShows || !item.id"
-              />
-              <ButtonChiTiet_4
-                :show-id="item.id"
-                text="Chi tiết"
-              />
-            </div>
-          </div>
-        </article>
+        <div v-if="loadingShows" class="show-loading-wrapper">
+          <IconLoading />
+        </div>
+
+        <KhungThongTinShow
+          v-else-if="upcomingShows.length > 0"
+          :show-id="upcomingShows[0].id"
+          :ten-show="upcomingShows[0].name"
+          :ngay="upcomingShows[0].date || 'Chưa xếp'"
+          :gio="upcomingShows[0].time || 'Chưa xếp'"
+          :trang-thai="upcomingShows[0].status"
+        />
+
+        <div v-else class="show-message">
+          Chưa có show sắp tới
+        </div>
       </div>
 
-      <!-- 2. DANH SÁCH ICON MENU -->
       <CacChuNang :is-admin="isAdmin" />
     </section>
   </div>
@@ -99,12 +59,10 @@ import { useRouter } from 'vue-router'
 import { API_ENDPOINTS, SHOW_GANNHAT_SAPTOI_API } from '../config/api'
 import { getUserField } from '../utils/auth'
 
-// Import các Component nút Fancy & Danh sách chức năng
-import ButtonChiTiet_4 from '../components/common/ButtonChiTiet.vue'
-import ButtonDangKyShow_4 from '../components/common/ButtonDangKyShow.vue'
+import KhungThongTinShow from '../components/KhungThongTinShow.vue'
+import IconLoading from '../components/IconLoading.vue'
 import CacChuNang from './CacChucNang.vue'
-
-import logo from '../assets/logo 2008.jpg'
+import logo from '../assets/logo2008.jpg'
 
 type ShowItem = {
   id: string | number
@@ -125,36 +83,46 @@ const upcomingShows = ref<ShowItem[]>([])
 
 const readStorage = (key: string): string => {
   const fromAuth = getUserField(key)
-  if (fromAuth !== undefined && fromAuth !== null && String(fromAuth).trim() !== '') {
+
+  if (
+    fromAuth !== undefined &&
+    fromAuth !== null &&
+    String(fromAuth).trim() !== ''
+  ) {
     return String(fromAuth).trim()
   }
+
   const direct = localStorage.getItem(key)
   return direct ? direct.trim() : ''
 }
 
-// ── USER & AUTH ──
 const isAdmin = computed(() => {
   const role = readStorage('vai_tro') || readStorage('role')
   return role.toLowerCase() === 'admin'
 })
 
 const displayName = computed(() => {
-  const name = readStorage('ten_ns') || readStorage('ten') || readStorage('name')
+  const name =
+    readStorage('ten_ns') ||
+    readStorage('ten') ||
+    readStorage('name')
+
   return name || 'Đăng nhập'
 })
 
 const isLoggedIn = computed(() => {
-  return displayName.value !== 'Đăng nhập' && displayName.value !== 'Chưa đăng nhập'
+  return (
+    displayName.value !== 'Đăng nhập' &&
+    displayName.value !== 'Chưa đăng nhập'
+  )
 })
 
-// Chuyển hướng sang trang /login khi bấm vào chữ "Đăng nhập"
 const handleUserClick = () => {
   if (!isLoggedIn.value) {
     router.push('/login')
   }
 }
 
-// ── LOGIC CHẶN ZOOM MÀN HÌNH ──
 let lastTouchEnd = 0
 
 const handleTouchStart = (e: TouchEvent) => {
@@ -165,20 +133,16 @@ const handleTouchStart = (e: TouchEvent) => {
 
 const handleTouchEnd = (e: TouchEvent) => {
   const currentTime = Date.now()
+
   if (currentTime - lastTouchEnd <= 300) {
     e.preventDefault()
   }
+
   lastTouchEnd = currentTime
 }
 
 const handleGestureStart = (e: Event) => {
   e.preventDefault()
-}
-
-const formatStatusLabel = (rawStatus: string): string => {
-  const normalized = String(rawStatus || '').trim().toLowerCase()
-  if (!normalized || normalized === 'chưa diễn') return 'Sắp diễn'
-  return String(rawStatus).trim()
 }
 
 const mapShow = (item: any, idx = 0): ShowItem => ({
@@ -190,25 +154,31 @@ const mapShow = (item: any, idx = 0): ShowItem => ({
   customer: String(item?.ten_khachhang || '').trim(),
   phone: String(item?.sdt || '').trim(),
   showType: String(item?.ma_loai_show || '').trim(),
-  status: formatStatusLabel(item?.trang_thai || ''),
+  status: String(item?.trang_thai || 'Chưa xác định').trim()
 })
 
 const fetchUpcoming = async () => {
   loadingShows.value = true
+  upcomingShows.value = []
+
   try {
     const endpoint =
-      (API_ENDPOINTS as any).SHOW_GANNHAT_SAPTOI || SHOW_GANNHAT_SAPTOI_API
+      (API_ENDPOINTS as any).SHOW_GANNHAT_SAPTOI ||
+      SHOW_GANNHAT_SAPTOI_API
+
     const res = await fetch(endpoint)
     const result = await res.json()
 
-    const isOk = result?.code === 200 || result?.success === true || result?.status === 'success'
-    if (isOk && result?.data) {
+    if (result?.code === 200 && result?.data) {
       if (Array.isArray(result.data)) {
-        upcomingShows.value = result.data.slice(0, 1).map((item: any, idx: number) => mapShow(item, idx))
-      } else if (typeof result.data === 'object' && Object.keys(result.data).length > 0) {
+        upcomingShows.value = result.data
+          .slice(0, 1)
+          .map((item: any, idx: number) => mapShow(item, idx))
+      } else if (
+        typeof result.data === 'object' &&
+        Object.keys(result.data).length > 0
+      ) {
         upcomingShows.value = [mapShow(result.data, 0)]
-      } else {
-        upcomingShows.value = []
       }
     } else {
       upcomingShows.value = []
@@ -224,9 +194,17 @@ const fetchUpcoming = async () => {
 onMounted(() => {
   fetchUpcoming()
 
-  document.addEventListener('touchstart', handleTouchStart, { passive: false })
-  document.addEventListener('touchend', handleTouchEnd, { passive: false })
-  document.addEventListener('gesturestart', handleGestureStart, { passive: false })
+  document.addEventListener('touchstart', handleTouchStart, {
+    passive: false
+  })
+
+  document.addEventListener('touchend', handleTouchEnd, {
+    passive: false
+  })
+
+  document.addEventListener('gesturestart', handleGestureStart, {
+    passive: false
+  })
 })
 
 onUnmounted(() => {
@@ -237,10 +215,8 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-/* Import CSS Loading từ src/styles/loading.css */
 @import '../styles/loading.css';
 
-/* KHUNG CHÍNH CỐ ĐỊNH KÍCH THƯỚC MÀN HÌNH, KHÔNG BỊ TRÀN TỰ DO */
 .home-page {
   position: fixed;
   top: 0;
@@ -257,7 +233,6 @@ onUnmounted(() => {
   user-select: none;
 }
 
-/* ── HEADER ── */
 .home-header {
   background: transparent;
   padding: 12px 16px 8px 0;
@@ -289,7 +264,12 @@ onUnmounted(() => {
   gap: 10px;
   padding: 6px 16px 6px 12px;
   border-radius: 0 999px 999px 0;
-  background: linear-gradient(135deg, #fef08a 0%, #eab308 50%, #ca8a04 100%);
+  background: linear-gradient(
+    135deg,
+    #fef08a 0%,
+    #eab308 50%,
+    #ca8a04 100%
+  );
   border: 1px solid #fde047;
   border-left: none;
   box-shadow: 2px 3px 10px rgba(202, 138, 4, 0.25);
@@ -352,7 +332,6 @@ onUnmounted(() => {
   text-decoration: underline;
 }
 
-/* ── PHẦN THÂN ── */
 .home-bottom {
   flex: 1;
   overflow-y: auto;
@@ -361,36 +340,68 @@ onUnmounted(() => {
   overscroll-behavior-y: contain;
 }
 
-.section-title { max-width: 760px; margin: 0 auto 8px; font-size: 13px; font-weight: 800; color: #8f0000; }
-
-/* ── CARD SHOW ── */
-.upcoming-list { max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 8px; }
-.schedule-card {
-  background: #ffffff;
-  border-radius: 14px; padding: 10px 12px;
-  border: 1px solid rgba(143, 0, 0, 0.12);
-  box-shadow: 0 4px 14px rgba(143, 0, 0, 0.08);
-  border-left: 5px solid #9ca3af;
+.section-title {
+  max-width: 760px;
+  margin: 0 auto 12px;
+  font-size: 13px;
+  font-weight: 800;
+  color: #8f0000;
 }
-.schedule-card--not-played { border-left-color: #facc15; }
-.schedule-card__top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
-.schedule-card__name { font-size: 16px; font-weight: 800; color: #8f0000; line-height: 1.2; flex: 1; }
-.schedule-card__tag { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 999px; white-space: nowrap; }
-.schedule-card__tag--not-played { color: #a16207; background: #fffbea; }
-.schedule-card__content { display: flex; flex-direction: column; gap: 4px; }
-.schedule-card__line { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
-.schedule-card__key { font-size: 13px; font-weight: 700; color: #8f0000; }
-.schedule-card__key--inline { margin-left: 10px; }
-.schedule-card__value { font-size: 13px; font-weight: 500; color: #444; display: inline-flex; align-items: center; }
-.schedule-card__actions { margin-top: 6px; display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap; align-items: center; }
 
-/* ── RESPONSIVE ── */
+.upcoming-list {
+  max-width: 760px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.show-loading-wrapper {
+  position: relative;
+  width: 100%;
+  height: 220px;
+  overflow: hidden;
+  border-radius: 18px;
+  background: transparent;
+}
+
+.show-loading-wrapper :deep(.loading-container) {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  min-height: unset;
+  background: transparent;
+  backdrop-filter: none;
+  border: none;
+  box-shadow: none;
+}
+
+.show-message {
+  padding: 24px 16px;
+  text-align: center;
+  color: #8f0000;
+  font-size: 14px;
+  font-weight: 700;
+  background: #fff7f7;
+  border: 1px dashed rgba(143, 0, 0, 0.25);
+  border-radius: 14px;
+}
+
 @media (max-width: 640px) {
-  .home-header__logo { width: 38px; height: 38px; }
-  .home-header__username { font-size: 14px; max-width: 160px; }
-  .home-subtitle { font-size: 9px; padding-left: 12px; }
-  .schedule-card { padding: 10px; }
-  .schedule-card__name { font-size: 15px; }
-  .schedule-card__key, .schedule-card__value { font-size: 12px; }
+  .home-header__logo {
+    width: 38px;
+    height: 38px;
+  }
+
+  .home-header__username {
+    font-size: 14px;
+    max-width: 160px;
+  }
+
+  .home-subtitle {
+    font-size: 9px;
+    padding-left: 12px;
+  }
 }
 </style>

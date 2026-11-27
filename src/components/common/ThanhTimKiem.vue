@@ -1,109 +1,139 @@
-<script setup lang="ts">
-defineProps<{
-  keyword?: string
-  placeholder?: string
-}>()
-
-const emit = defineEmits<{
-  (e: 'update:keyword', value: string): void
-}>()
-
-const onInput = (e: Event) => {
-  emit('update:keyword', (e.target as HTMLInputElement).value)
-}
-
-const clearSearch = () => {
-  emit('update:keyword', '')
-}
-</script>
 
 <template>
-  <div class="group">
-    <svg viewBox="0 0 24 24" aria-hidden="true" class="search-icon">
-      <g>
-        <path
-          d="M21.53 20.47l-3.66-3.66C19.195 15.24 20 13.214 20 11c0-4.97-4.03-9-9-9s-9 4.03-9 9 4.03 9 9 9c2.215 0 4.24-.804 5.808-2.13l3.66 3.66c.147.146.34.22.53.22s.385-.073.53-.22c.295-.293.295-.767.002-1.06zM3.5 11c0-4.135 3.365-7.5 7.5-7.5s7.5 3.365 7.5 7.5-3.365 7.5-7.5 7.5-7.5-3.365-7.5-7.5z"
-        ></path>
-      </g>
-    </svg>
+  <div class="thanh-tim-kiem">
+    <div class="search-box">
+      <svg
+        class="search-icon"
+        xmlns="http://www.w3.org/2000/svg"
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <circle cx="11" cy="11" r="8" />
+        <path d="m21 21-4.35-4.35" />
+      </svg>
 
-    <input
-      :value="keyword"
-      class="input"
-      type="search"
-      :placeholder="placeholder || 'Tìm kiếm...'"
-      @input="onInput"
-    />
+      <input
+        type="text"
+        :value="modelValue"
+        :placeholder="placeholder"
+        @input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
+      />
+    </div>
 
-    <button v-if="keyword" type="button" class="clear-btn" @click="clearSearch">✕</button>
+    <button
+  class="sort-button"
+  type="button"
+  aria-label="Sắp xếp"
+  @click="$emit('sort')"
+>
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="21"
+    height="21"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
+    <path d="M8 17V4" />
+    <path d="M4 8l4-4 4 4" />
+    <path d="M16 7v13" />
+    <path d="M12 16l4 4 4-4" />
+  </svg>
+</button>
   </div>
 </template>
 
+<script setup lang="ts">
+withDefaults(defineProps<{
+  modelValue?: string
+  placeholder?: string
+}>(), {
+  modelValue: '',
+  placeholder: 'Tìm kiếm...'
+})
+
+defineEmits<{
+  'update:modelValue': [value: string]
+  sort: []
+}>()
+</script>
+
 <style scoped>
-.group {
+.thanh-tim-kiem {
   display: flex;
-  line-height: 28px;
   align-items: center;
-  position: relative;
-  max-width: 170px;
+  gap: 10px;
   width: 100%;
 }
 
-.input {
-  font-family: inherit;
-  width: 100%;
-  height: 28px;
-  padding-left: 2.1rem;
-  padding-right: 1.8rem;
-  box-shadow: 0 0 0 1px #cbd5e1;
-  border: 0;
-  border-radius: 999px; /* Bo tròn hoàn toàn dạng capsule */
-  background-color: #ffffff;
-  outline: none;
-  color: #334155;
-  font-size: 12px;
-  transition: all 0.2s ease;
-  cursor: text;
-  z-index: 0;
-}
-
-.input::placeholder {
-  color: #94a3b8;
-  font-size: 11px;
-}
-
-.input:hover {
-  box-shadow: 0 0 0 1.5px #8f0000;
-}
-
-.input:focus {
-  box-shadow: 0 0 0 2px #8f0000;
+.search-box {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  height: 42px;
+  gap: 9px;
+  padding: 0 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 9px;
+  background: #ffffff;
 }
 
 .search-icon {
-  position: absolute;
-  left: 0.75rem; /* Căn chỉnh lại khoảng cách icon cho cân đối với viền tròn */
-  fill: #64748b;
-  width: 0.85rem;
-  height: 0.85rem;
-  pointer-events: none;
-  z-index: 1;
+  flex-shrink: 0;
+  color: #8f0000;
 }
 
-/* Nút xóa nhanh từ khóa */
-.clear-btn {
-  position: absolute;
-  right: 0.6rem; /* Căn chỉnh nút xóa lùi vào trong khung tròn */
+.search-box input {
+  width: 100%;
+  min-width: 0;
   border: none;
+  outline: none;
   background: transparent;
-  color: #94a3b8;
-  font-size: 11px;
-  cursor: pointer;
-  padding: 0 4px;
-  z-index: 1;
+  color: #333333;
+  font-size: 13px;
 }
 
-.clear-btn:hover {
-  color: #dc2626;
+.search-box input::placeholder {
+  color: #9ca3af;
+}
+
+.sort-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  border: 1px solid #e5e7eb;
+  border-radius: 9px;
+  background: #ffffff;
+  color: #8f0000;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sort-button:hover {
+  background: #fff1f1;
+  border-color: #8f0000;
+}
+
+@media (max-width: 480px) {
+  .search-box,
+  .sort-button {
+    height: 40px;
+  }
+
+  .sort-button {
+    width: 40px;
+  }
 }
 </style>

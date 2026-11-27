@@ -1,86 +1,79 @@
+
 <template>
-  <header class="page-header">
-    <div class="page-header__inner">
-      <button class="back-btn" type="button" @click="goBack" aria-label="Quay lại">
-        <svg class="back-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="15 18 9 12 15 6"></polyline>
-        </svg>
-      </button>
-      <span class="header-title">{{ title }}</span>
-    </div>
-  </header>
+  <div class="header-quay-lai">
+    <button
+      class="back-button"
+      @click="quayLai"
+      aria-label="Quay lại"
+    >
+      ‹
+    </button>
+
+    <h2 class="header-title">{{ title }}</h2>
+  </div>
 </template>
 
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
 
-// Định nghĩa Props truyền vào từ Component cha
-const props = withDefaults(defineProps<{
-  title?: string
-}>(), {
-  title: 'Thông tin'
-})
+defineProps<{
+  title: string
+}>()
 
 const router = useRouter()
 
-const goBack = () => {
-  if (window.history.length > 1) {
-    router.back()
-  } else {
-    router.push('/')
-  }
+const quayLai = () => {
+  router.back()
 }
 </script>
 
 <style scoped>
-.page-header { 
-  background: #ffffff; 
-  padding: 10px 14px; 
-  border-bottom: none;
-  box-shadow: none;
-  flex-shrink: 0;
-  z-index: 10;
-}
-
-.page-header__inner { 
-  max-width: 760px; 
-  margin: 0 auto; 
+.header-quay-lai {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 0;
 }
 
-.back-btn {
-  display: inline-flex;
+.back-button {
+  display: flex;
   align-items: center;
   justify-content: center;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  padding: 4px;
-  border-radius: 50%;
-  transition: background-color 0.2s ease;
-}
-
-.back-btn:hover {
-  background-color: #f1f5f9;
-}
-
-.back-icon {
   width: 22px;
-  height: 22px;
-  stroke: #8f0000;
+  height: 30px;
   flex-shrink: 0;
+  border: none;
+  background: transparent;
+  color: #8f0000;
+  font-size: 38px;
+  font-weight: 400;
+  line-height: 1;
+  padding: 0;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.back-button:hover {
+  transform: translateX(-3px);
 }
 
 .header-title {
-  font-size: 16px;
-  font-weight: 700;
+  margin: 0;
   color: #8f0000;
-  user-select: none;
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 30px;
+  transform: translateY(2px);
 }
 
-@media (max-width: 639px) {
-  .header-title { font-size: 15px; }
+@media (max-width: 480px) {
+  .header-quay-lai {
+    gap: 10px;
+  }
+
+  .header-title {
+    font-size: 16px;
+  }
 }
 </style>

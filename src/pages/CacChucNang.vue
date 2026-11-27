@@ -1,3 +1,4 @@
+
 <template>
   <div class="cac-chuc-nang">
     <div class="section-title margin-top-lg">{{ title }}</div>
@@ -100,7 +101,7 @@ const visibleMenuItems = computed(() => {
 .section-title {
   max-width: 760px;
   margin: 0 auto 8px;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 800;
   color: #8f0000;
 }
@@ -115,7 +116,7 @@ const visibleMenuItems = computed(() => {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   justify-content: start;
-  gap: 12px 8px;
+  gap: 14px 8px;
   padding: 4px 0;
 }
 
@@ -128,39 +129,48 @@ const visibleMenuItems = computed(() => {
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  gap: 6px;
+  gap: 7px;
   text-align: center;
-  transition: transform 0.15s;
+  transition: transform 0.2s ease;
 }
 
 .home-menu__item:hover {
-  transform: translateY(-2px);
+  transform: translateY(-3px);
 }
 
 .home-menu__item span {
-  font-size: 11px;
-  font-weight: 700;
+  font-size: 13px;
+  font-weight: 800;
   color: #8f0000;
-  line-height: 1.25;
+  line-height: 1.35;
   word-break: break-word;
 }
 
 .menu-icon {
-  width: 44px;
-  height: 44px;
-  object-fit: cover;
-  border-radius: 10px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  width: 58px;
+  height: 58px;
+  object-fit: contain;
+  border-radius: 12px;
+  box-shadow: 0 2px 7px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease;
+}
+
+.home-menu__item:hover .menu-icon {
+  transform: scale(1.05);
 }
 
 @media (max-width: 640px) {
   .menu-icon {
-    width: 38px;
-    height: 38px;
+    width: 50px;
+    height: 50px;
   }
 
   .home-menu__item span {
-    font-size: 10px;
+    font-size: 12px;
+  }
+
+  .home-menu {
+    gap: 12px 6px;
   }
 }
 </style>
